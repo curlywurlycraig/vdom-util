@@ -1,0 +1,42 @@
+body {
+    background-color: #111;
+    font-family: "Arial", sans-serif;
+    color: #ccc;
+}
+
+button {
+    background-color: #333;
+    color: #ddd;
+    border: 1px solid #555;
+    border-radius: 2px;
+}
+
+button:focus {
+    outline: 1px dashed #55b;
+    outline-offset: 2px;
+}
+
+button:hover {
+    background-color: #555;
+    border: 1px solid #777;
+}
+
+input {
+    background-color: #333;
+    color: #ddd;
+    border: 1px solid #555;
+    border-radius: 2px;
+}
+
+input:focus {
+    outline: 1px dashed #55b;
+    outline-offset: 2px;
+}
+
+#editor {
+    margin-top: 10px;
+}
+
+::selection {
+  background: #224; /* WebKit/Blink Browsers */
+}
