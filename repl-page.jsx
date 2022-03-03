@@ -58,7 +58,7 @@ const innerHtmlDataStructureToNode = (tag, attrs, ...value) => {
         return x
       })
       .map(x => {
-        if (typeof x === 'string') {  
+        if (typeof x === 'string' || typeof x === 'number') {  
           return x
         }
       
@@ -101,19 +101,25 @@ const atom = (initialValue) => {
 };
 
 //
+// JSX component maker
+//
+const toHiccup = (name, options, ...children) => {
+    return [name, options || {}, ...children];
+}
+
+//
 // demo
 //
 
 const mainEl = document.getElementById("main");
 
 const myAtom = atom(0);
-const counterComponent = (count, setCount) =>
-      ["div",
-       {},
-       ["p", {}, `count is ${count}`],
-       ["button", {
-	   click: () => setCount(count + 1)
-       }, "increment"]]
+const counterComponent = (count, setCount) => (
+    <div>
+	<p>count is {count}</p>
+	<button click={() => setCount(count + 1)}>increment</button>
+    </div>
+);
 
 
 // Since presentational components are simply functions that return hiccup, subscribing to changes in
@@ -123,44 +129,18 @@ myAtom.addTrigger((count, setCount) => h(extraEl, counterComponent(count, setCou
 myAtom.addTrigger((count, setCount) => h(mainEl, counterComponent(count, setCount)));
 
 // Let's add a text box too
-const counterEditor = (count, setCount) =>
-      ["input",
-       {input: (e) => setCount(Number(e.target.value)),
-	value: count},
-       ''];
+const counterEditor = (count, setCount) => (
+    <input input={(e) => setCount(Number(e.target.value))} value={count} />
+);
 
 const counterEditorEl = document.getElementById("editor");
 myAtom.addTrigger((count, setCount) => h(counterEditorEl, counterEditor(count, setCount)));
 
 myAtom.set(0);
 
-// setInterval(() => {
-//     myAtom.set(myAtom.value + 1);
-// }, 1000);
-
-
-// Trying to devise a nice way of composing things:
-
-const requestComponentConnector = () => {
-    const results = atom(null);
-    const isPending = atom(null);
-    const onClickRequest = () => {
-	isPending.set(true);
-	setTimeout(() => {
-	    results.set('yay');
-	    isPending.set(false);
-	});
-    }
-
-    return { results, isPending, onClickRequest }
-};
-
-const requestComponentPure = ({ results, isPending, onClickRequest }) => 
-      ["div",
-       (isPending ? ["p", "loading..."] : null),
-       (results ? ["p", "got results"] : null),
-       ["button", { click: onClickRequest }, "make request"]];
-
+setInterval(() => {
+    myAtom.set(myAtom.value + 1);
+}, 1000);
 
 // Next step: how to keep the same elements, instead of creating new ones?
 // Ideally without having to go with a fully fledged "virtual dom"
