@@ -1,42 +1,76 @@
 body {
-    background-color: #111;
-    font-family: "Arial", sans-serif;
-    color: #ccc;
+    background-color: #112;
+    font-family: sans-serif;
+    color: #eef;
+}
+
+a {
+    color: #ffc;
+}
+
+a:focus {
+    background-image: linear-gradient(to bottom right, #ccc 0%, #ffc 100%);
+    color: black;
+    border-radius: 2px;
+    outline: 1px solid #ffc;
+    outline-offset: 2px;
 }
 
 button {
-    background-color: #333;
-    color: #ddd;
-    border: 1px solid #555;
+    color: #dde;
+    border: 1px solid #557;
     border-radius: 2px;
+    background-image: linear-gradient(to bottom right, #334 0%, #336 100%);
+    padding: 5px;
 }
 
 button:focus {
-    outline: 1px dashed #55b;
+    outline: 1px solid #aa8;
+    background-image: linear-gradient(to bottom right, #334 0%, #663 100%);
     outline-offset: 2px;
 }
 
 button:hover {
-    background-color: #555;
-    border: 1px solid #777;
+    background-color: #445;
+    border: 1px solid #779;
 }
 
 input {
-    background-color: #333;
-    color: #ddd;
-    border: 1px solid #555;
+    background-color: #334;
+    color: #ddf;
+    border: 1px solid #556;
     border-radius: 2px;
 }
 
 input:focus {
-    outline: 1px dashed #55b;
+    outline: 1px solid #aa8;
     outline-offset: 2px;
 }
+
+::selection {
+  background: #aa8; /* WebKit/Blink Browsers */
+  color: black;
+}
+
+hr {
+    height: 1px;
+    background-color: #334;
+    border: none;
+}
+
+main {
+    max-width: 800px;
+}
+
+/* Page specifics */
 
 #editor {
     margin-top: 10px;
 }
 
-::selection {
-  background: #224; /* WebKit/Blink Browsers */
+#mousepad {
+    margin-top: 50px;
+    width: 200px;
+    height: 200px;
+    background-color: #fff1;
 }

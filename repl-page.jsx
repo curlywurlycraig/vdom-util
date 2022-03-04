@@ -100,6 +100,12 @@ const atom = (initialValue) => {
     return result;
 };
 
+/**
+Makes a style string from an object
+*/
+const style = (obj) =>
+      Object.entries(obj).reduce((acc, [k, v]) => `${acc}; ${k}: ${v}`, '')
+
 //
 // JSX component maker
 //
@@ -121,6 +127,26 @@ const counterComponent = (count, setCount) => (
     </div>
 );
 
+const cursorPositionAtom = atom([0, 0]);
+const mousepadEl = document.getElementById("mousepad");
+const Mousepad = ([x, y], setCursorPosition) => {
+    const opacity = 100 * Math.min(x / 200, 1);
+    const red = 255 * Math.min(y / 200, 1);
+    const pStyle = style({
+	position: 'relative',
+	opacity: `${opacity}%`,
+	color: `rgb(${red}, 255, 255)`,
+    });
+
+    return (
+	<div style="width: 100%; height: 100%" mousemove={e => setCursorPosition([e.offsetX, e.offsetY])}>
+	    <p style={pStyle}>Cursor pos is { x } { y }</p>
+	</div>
+    );
+};
+cursorPositionAtom.addTrigger((pos, setPos) => h(mousepadEl, Mousepad(pos, setPos)));
+cursorPositionAtom.set([0, 0]);
+
 
 // Since presentational components are simply functions that return hiccup, subscribing to changes in
 // an atom and having the component be re-rendered is very simple
@@ -138,9 +164,9 @@ myAtom.addTrigger((count, setCount) => h(counterEditorEl, counterEditor(count, s
 
 myAtom.set(0);
 
-setInterval(() => {
-    myAtom.set(myAtom.value + 1);
-}, 1000);
+// setInterval(() => {
+//     myAtom.set(myAtom.value + 1);
+// }, 1000);
 
 // Next step: how to keep the same elements, instead of creating new ones?
 // Ideally without having to go with a fully fledged "virtual dom"
