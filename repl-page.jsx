@@ -164,6 +164,30 @@ myAtom.addTrigger((count, setCount) => h(counterEditorEl, counterEditor(count, s
 
 myAtom.set(0);
 
+
+/**
+   A virtual dom node. This can be one of two forms: a HTML element or otherwise.
+   HTML elements are distinguished by being lower case (and therefore strings instead of references).
+*/
+const vnode = (tag, props, ...children) => {
+    return {
+	tag,
+	props,
+	children
+    };
+}
+
+/**
+   Given a previous node and a next node, make changes to the previous node based on the differences with the next node.
+*/
+const update = (prev, next) => {
+    // First, recursively update children
+
+    // Calculate the diff between prev props and next props
+    // If this is a HTML element and has a "_dom", update all the diffed parts in _dom.
+    // Then update the props.
+}
+
 // setInterval(() => {
 //     myAtom.set(myAtom.value + 1);
 // }, 1000);
