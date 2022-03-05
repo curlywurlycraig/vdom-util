@@ -88,10 +88,6 @@ const updateNode = (prev, next) => {
     return prev;
 };
 
-const updateNode = (prev, next) => {
-
-}
-
 //
 // Utils
 //
