@@ -26,61 +26,71 @@ const mergeElementWithAttrs = (el, attrs) => {
   return el
 }
 
-const hiccupToNode = ([tag, ...rest]) => {
+const hiccupToElement = ([tag, ...rest]) => {
     if (!Array.isArray(rest[0]) && typeof rest[0] === 'object') {
-	return hiccupToNodeWithAttrs(tag, rest[0], ...rest.slice(1));
+	return hiccupToElementWithAttrs(tag, rest[0], ...rest.slice(1));
     } else {
-	return hiccupToNodeWithAttrs(tag, {}, ...rest);
+	return hiccupToElementWithAttrs(tag, {}, ...rest);
     }
 }
 
-const hiccupToNodeWithAttrs = (tag, attrs, ...value) => {
-  const parsed = mergeElementWithAttrs(document.createElement(tag), attrs)
-  const resolveValue = val => {
-    return val
-      .map(x => {
-        if (Array.isArray(x) && x.length === 0 ) {
-          return ''
-        }
+const hiccupToElementWithAttrs = (tag, attrs, ...children) => {
+    if (typeof tag === 'function') {
+	return hiccupToElement(tag({ ...attrs, children }));
+    }
 
-        return x
-      })
-      .map(x => {
-        if (typeof x === 'string' || typeof x === 'number') {  
-          return x
-        }
-      
-        return hiccupToNode(x)
-      })
-  } 
+    const parsed = mergeElementWithAttrs(document.createElement(tag), attrs)
+    const resolveChildren = val => {
+	return val
+	    .map(x => {
+		if (Array.isArray(x) && x.length === 0 ) {
+		    return ''
+		}
 
-  return resolveValue(value)
-    .reduce((ac, x) => { 
-      ac.append(x)
-      return ac
-    }, parsed)
+		return x
+	    })
+	    .map(x => {
+		if (typeof x === 'string' || typeof x === 'number') {  
+		    return x
+		}
+		
+		return hiccupToElement(x)
+	    })
+    } 
+
+    return resolveChildren(children)
+	.reduce((ac, x) => { 
+	    ac.append(x)
+	    return ac
+	}, parsed)
 }
 
-// Next step: how to keep the same elements, instead of creating new ones?
-// Ideally without having to go with a fully fledged "virtual dom"
-
-// Things I can't quite fit together:
-// 1. Reacting to changes (atoms are a good piece of this)
-// 2. Composing atoms and logic in a nice way with pure functions
-// 3. "Mounting" and having the DOM update without e.g. losing focus on an input
-// 3.1. I think I can do this just by having h() try to update stuff that's already there
-
-// Basically, instead of h(), have some update() function that takes an HTML element
-// and a hiccup element and commits the differences to the existing element
-
-const update = (el, hic) => {
+/**
+   Reset the contents of el to a fresh render of hic.
+*/
+const reset = (el, hic) => {
     el.innerHTML = '';
-    el.appendChild(hiccupToNode(hic))
+    el.appendChild(hiccupToElement(hic))
     return el;
 };
 
-// I quite like the idea of the pure functions not using closures. Basically you could always lift
-// a pure function out.
+const update = (el, hic) => updateNode(el, hiccupToElement(hic));
+
+const updateNode = (prev, next) => {
+    if (prev.tagName !== next.tagName) {
+	prev.parentNode.replaceChild(prev, next);
+	return;
+    }
+
+    // TODO Update instead of wiping out
+    prev.innerHTML = '';
+    prev.appendChild(next)
+    return prev;
+};
+
+const updateNode = (prev, next) => {
+
+}
 
 //
 // Utils
@@ -110,15 +120,15 @@ const atom = (initialValue) => {
 };
 
 /**
-Makes a style string from an object
+   Makes a style string from an object
 */
 const style = (obj) =>
       Object.entries(obj).reduce((acc, [k, v]) => `${acc}; ${k}: ${v}`, '')
 
-//
-// JSX component maker
-//
-const toHiccup = (name, options, ...children) => {
+/**
+   Conform to the jsx factory signature to produce hiccup.
+*/
+const hic = (name, options, ...children) => {
     return [name, options || {}, ...children];
 }
 
@@ -127,9 +137,12 @@ const toHiccup = (name, options, ...children) => {
 //
 
 const mainEl = document.getElementById("main");
+const mousepadEl = document.getElementById("mousepad");
+const extraEl = document.getElementById("extra");
+const counterEditorEl = document.getElementById("editor");
 
 const myAtom = atom(0);
-const counterComponent = (count, setCount) => (
+const Counter = ({ count, setCount }) => (
     <div>
 	<p>count is {count}</p>
 	<button click={() => setCount(count + 1)}>increment</button>
@@ -137,8 +150,7 @@ const counterComponent = (count, setCount) => (
 );
 
 const cursorPositionAtom = atom([0, 0]);
-const mousepadEl = document.getElementById("mousepad");
-const Mousepad = ([x, y], setCursorPosition) => {
+const Mousepad = ({ pos: [x, y], setPos: setCursorPosition }) => {
     const opacity = 100 * Math.min(x / 200, 1);
     const red = 255 * Math.min(y / 200, 1);
     const pStyle = style({
@@ -153,23 +165,18 @@ const Mousepad = ([x, y], setCursorPosition) => {
 	</div>
     );
 };
-cursorPositionAtom.addTrigger((pos, setPos) => update(mousepadEl, Mousepad(pos, setPos)));
+cursorPositionAtom.addTrigger((pos, setPos) => update(mousepadEl, <Mousepad pos={pos} setPos={setPos} />));
 cursorPositionAtom.set([0, 0]);
 
-
-// Since presentational components are simply functions that return hiccup, subscribing to changes in
-// an atom and having the component be re-rendered is very simple
-const extraEl = document.getElementById("extra");
-myAtom.addTrigger((count, setCount) => update(extraEl, counterComponent(count, setCount)));
-myAtom.addTrigger((count, setCount) => update(mainEl, counterComponent(count, setCount)));
+myAtom.addTrigger((count, setCount) => update(extraEl, <Counter count={count} setCount={setCount} />));
+myAtom.addTrigger((count, setCount) => update(mainEl, <Counter count={count} setCount={setCount} />));
 
 // Let's add a text box too
-const counterEditor = (count, setCount) => (
+const CounterEditor = ({ count, setCount }) => (
     <input input={(e) => setCount(Number(e.target.value))} value={count} />
 );
 
-const counterEditorEl = document.getElementById("editor");
-myAtom.addTrigger((count, setCount) => update(counterEditorEl, counterEditor(count, setCount)));
+myAtom.addTrigger((count, setCount) => update(counterEditorEl, <CounterEditor count={count} setCount={setCount} />));
 
 myAtom.set(0);
 

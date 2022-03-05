@@ -2,7 +2,7 @@ Little virtualdom utilities.
 
 # Building
 
-`esbuild --jsx-factory=toHiccup repl-page.jsx > repl-page.min.js`
+`esbuild --jsx-factory=hic repl-page.jsx > repl-page.min.js`
 
 # Running
 
