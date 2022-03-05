@@ -179,7 +179,7 @@ const extraEl = document.getElementById("extra");
 const counterEditorEl = document.getElementById("editor");
 
 const UpsideDown = ({ children }) => (
-    <div style={style({transform: 'rotate(180deg'})}>
+    <div style={style({transform: 'rotate(180deg)'})}>
 	{ children }
     </div>
 );
