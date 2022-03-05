@@ -27,11 +27,16 @@ const mergeElementWithAttrs = (el, attrs) => {
 }
 
 const hiccupToElement = ([tag, ...rest]) => {
-    if (!Array.isArray(rest[0]) && typeof rest[0] === 'object') {
-	return hiccupToElementWithAttrs(tag, rest[0], ...rest.slice(1));
-    } else {
-	return hiccupToElementWithAttrs(tag, {}, ...rest);
-    }
+    const hasAttrs = !Array.isArray(rest[0]) && typeof rest[0] === 'object';
+    const hic = hasAttrs
+	  ? [tag, rest[0], ...rest.slice(1)]
+	  : [tag, {}, ...rest];
+
+    const result = hiccupToElementWithAttrs(...hic);
+    // The hic representation is stored on the HTML Element to make it easier to perform diffs.
+    // This is basically like a virtual dom but stored on the real dom for convenience.
+    result._hic = hic;
+    return result;
 }
 
 const hiccupToElementWithAttrs = (tag, attrs, ...children) => {
@@ -73,9 +78,7 @@ const hiccupToElementWithAttrs = (tag, attrs, ...children) => {
 */
 const render = ([tag, attrs, ...children]) => {
     if (typeof tag === 'function') {
-	const result = tag({ ...attrs, children });
-	const superResult = render(result);
-	return superResult;
+	return render(tag({ ...attrs, children }));
     }
 
     const renderedChildren = children.map(child => {
@@ -102,22 +105,29 @@ const reset = (el, hic) => {
    This preserves existing HTML elements without removing and creating new ones.
 */
 const update = (el, hic) => {
-    reset(el, hic);
+    return reset(el, hic);
+    const rendered = render(hic);
+    const [tag, attrs, ...children] = rendered;
+
+    if (el.tagName !== tag) {
+	const newEl = hiccupToElement(rendered);
+	el.parentNode.replaceChild(el, hiccupToElement(rendered));
+	return newEl;
+    }
+
+    // Iterate through each attribute and update.
+    // This is where it would be handy to track the currently set attributes on the node
+    // (And probably why you'd want to store the previous elements)
+
+    reset(el, rendered);
 }
 
 const updateNode = (prev, next) => {
-    if (prev.tagName !== next.tagName) {
-	prev.parentNode.replaceChild(prev, next);
-	return;
-    }
 
     if (!prev.isEqualNode(next)) {
-	// 
+	// TODO
     }
 
-    // TODO Update instead of wiping out
-    prev.innerHTML = '';
-    prev.appendChild(next)
     return prev;
 };
 
