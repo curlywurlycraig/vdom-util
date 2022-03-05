@@ -66,20 +66,51 @@ const hiccupToElementWithAttrs = (tag, attrs, ...children) => {
 }
 
 /**
+   Given some hiccup, resolve any components to their resulting DOM only
+   hiccup. That is, only hiccup elements with lower case tag names should remain.
+   
+   This entails running the components with their attributes.
+*/
+const render = ([tag, attrs, ...children]) => {
+    const renderedChildren = children.map(child => {
+	if (Array.isArray(child) && child.length) {
+	    return render(child);
+	}
+	return child;
+    });
+
+    if (typeof tag === 'function') {
+	return render(tag({ ...attrs, children: renderedChildren }));
+    }
+
+    return [tag, attrs, ...renderedChildren];
+};
+
+/**
    Reset the contents of el to a fresh render of hic.
 */
 const reset = (el, hic) => {
     el.innerHTML = '';
-    el.appendChild(hiccupToElement(hic))
+    el.appendChild(hiccupToElement(render(hic)));
     return el;
 };
 
-const update = (el, hic) => updateNode(el, hiccupToElement(hic));
+/**
+   Given some HTML element, update that element and its children with the hiccup.
+   This preserves existing HTML elements without removing and creating new ones.
+*/
+const update = (el, hic) => {
+    reset(el, hic);
+}
 
 const updateNode = (prev, next) => {
     if (prev.tagName !== next.tagName) {
 	prev.parentNode.replaceChild(prev, next);
 	return;
+    }
+
+    if (!prev.isEqualNode(next)) {
+	// 
     }
 
     // TODO Update instead of wiping out
@@ -164,8 +195,18 @@ const Mousepad = ({ pos: [x, y], setPos: setCursorPosition }) => {
 cursorPositionAtom.addTrigger((pos, setPos) => update(mousepadEl, <Mousepad pos={pos} setPos={setPos} />));
 cursorPositionAtom.set([0, 0]);
 
-myAtom.addTrigger((count, setCount) => update(extraEl, <Counter count={count} setCount={setCount} />));
 myAtom.addTrigger((count, setCount) => update(mainEl, <Counter count={count} setCount={setCount} />));
+
+/**
+   An example of a custom component being rendered within a component.
+*/
+const TwoCounters = ({ count, setCount }) => (
+    <div>
+	<Counter count={count} setCount={setCount} />
+	<Counter count={count} setCount={setCount} />
+    </div>
+);
+myAtom.addTrigger((count, setCount) => update(extraEl, <TwoCounters count={count} setCount={setCount} />));
 
 // Let's add a text box too
 const CounterEditor = ({ count, setCount }) => (
