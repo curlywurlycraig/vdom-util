@@ -23,7 +23,7 @@ const mergeElementWithAttrs = (el, attrs) => {
       }
     })
 
-  return el
+    return el;
 }
 
 const hiccupToElement = ([tag, ...rest]) => {
@@ -72,16 +72,18 @@ const hiccupToElementWithAttrs = (tag, attrs, ...children) => {
    This entails running the components with their attributes.
 */
 const render = ([tag, attrs, ...children]) => {
+    if (typeof tag === 'function') {
+	const result = tag({ ...attrs, children });
+	const superResult = render(result);
+	return superResult;
+    }
+
     const renderedChildren = children.map(child => {
 	if (Array.isArray(child) && child.length) {
 	    return render(child);
 	}
 	return child;
     });
-
-    if (typeof tag === 'function') {
-	return render(tag({ ...attrs, children: renderedChildren }));
-    }
 
     return [tag, attrs, ...renderedChildren];
 };
@@ -150,12 +152,20 @@ const atom = (initialValue) => {
    Makes a style string from an object
 */
 const style = (obj) =>
-      Object.entries(obj).reduce((acc, [k, v]) => `${acc}; ${k}: ${v}`, '')
+      Object.entries(obj).reduce((acc, [k, v]) => `${acc}; ${k}: ${v}; `, '')
+
+const isHic = (thing) => Array.isArray(thing) && thing.length > 1 && typeof thing[1] === 'object' && !Array.isArray(thing[1]);
 
 /**
    Conform to the jsx factory signature to produce hiccup.
 */
 const hic = (name, options, ...children) => {
+    // Children could be a single argument that is an array of elements.
+    // This happens in the case that children is an attr of a custom Component.
+    if (children.length === 1 && Array.isArray(children[0]) && !isHic(children[0])) {
+	return [name, options || {}, ...children[0]];
+    }
+
     return [name, options || {}, ...children];
 }
 
@@ -168,12 +178,18 @@ const mousepadEl = document.getElementById("mousepad");
 const extraEl = document.getElementById("extra");
 const counterEditorEl = document.getElementById("editor");
 
+const UpsideDown = ({ children }) => (
+    <div style={style({transform: 'rotate(180deg'})}>
+	{ children }
+    </div>
+);
+
 const myAtom = atom(0);
 const Counter = ({ count, setCount }) => (
-    <div>
+    <UpsideDown>
 	<p>count is {count}</p>
 	<button click={() => setCount(count + 1)}>increment</button>
-    </div>
+    </UpsideDown>
 );
 
 const cursorPositionAtom = atom([0, 0]);
@@ -200,13 +216,14 @@ myAtom.addTrigger((count, setCount) => update(mainEl, <Counter count={count} set
 /**
    An example of a custom component being rendered within a component.
 */
-const TwoCounters = ({ count, setCount }) => (
-    <div>
-	<Counter count={count} setCount={setCount} />
-	<Counter count={count} setCount={setCount} />
-    </div>
+const ManyDots = ({ count, setCount }) => (
+    <UpsideDown>
+	<p>
+	    { new Array(count).fill('.') }
+	</p>
+    </UpsideDown>
 );
-myAtom.addTrigger((count, setCount) => update(extraEl, <TwoCounters count={count} setCount={setCount} />));
+cursorPositionAtom.addTrigger((pos) => update(mainEl, <ManyDots count={pos[0]} />));
 
 // Let's add a text box too
 const CounterEditor = ({ count, setCount }) => (
