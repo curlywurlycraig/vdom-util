@@ -2,8 +2,8 @@ Little virtualdom utilities.
 
 # Building
 
-`esbuild --jsx-factory=hic repl-page.jsx > repl-page.min.js`
+`npm run build`
 
 # Running
 
-Serve this directory and navigate to `/repl-page.html`
+Serve this directory and navigate to `/index.html`

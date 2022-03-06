@@ -1,2 +1,2 @@
 - [ ] Handle deletion of attrs in updateAttrs
-- [ ] Structure project properly (make a file for the utils and another for the demo)
+- [ ] Find a way to get rid of the logic that hiccupToElement needs

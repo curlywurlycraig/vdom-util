@@ -1,0 +1,29 @@
+{
+    "name": "vdom-util",
+    "version": "0.5.0",
+    "description": "Simple a light utilities for updating the DOM.",
+    "main": "out/index.js",
+    "scripts": {
+	"build": "esbuild --jsx-factory=hic --minify --bundle src/demo.jsx > out/demo.js",
+	"test": "test"
+    },
+    "repository": {
+	"type": "git",
+	"url": "git+https://github.com/curlywurlycraig/vdom-util.git"
+    },
+    "keywords": [
+	"dom",
+	"vdom",
+	"virtualdom",
+	"virtual",
+	"JSX",
+	"react",
+	"preact"
+    ],
+    "author": "Craig Wilkinson",
+    "license": "ISC",
+    "bugs": {
+	"url": "https://github.com/curlywurlycraig/vdom-util/issues"
+    },
+    "homepage": "https://github.com/curlywurlycraig/vdom-util#readme"
+}
