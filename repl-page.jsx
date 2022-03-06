@@ -137,6 +137,9 @@ const update = (el, hic) => {
   const newEl = updateAttrs(el, attrs);
   const newChildren = children.map((child, idx) => {
     if (isHic(child)) {
+      if (!el.children[idx]) {
+        return hiccupToElement(child);
+      }
       return update(el.children[idx], child);
     }
 
