@@ -40,10 +40,6 @@ const hiccupToElement = ([tag, ...rest]) => {
 }
 
 const hiccupToElementWithAttrs = (tag, attrs, ...children) => {
-    if (typeof tag === 'function') {
-	return hiccupToElement(tag({ ...attrs, children }));
-    }
-
     const parsed = mergeElementWithAttrs(document.createElement(tag), attrs)
     const resolveChildren = val => {
 	return val
@@ -101,35 +97,35 @@ const reset = (el, hic) => {
 };
 
 /**
+   Render the hic and apply it to the element.
+*/
+const apply = (hostEl, hic) => {
+    const renderedChild = hostEl.children[0];
+    if (!renderedChild || renderedChild._hic === undefined) {
+	// First run, easy.
+	return reset(hostEl, hic);
+    }
+
+    return update(renderedChild, render(hic));
+}
+
+/**
    Given some HTML element, update that element and its children with the hiccup.
    This preserves existing HTML elements without removing and creating new ones.
 */
 const update = (el, hic) => {
-    return reset(el, hic);
-    const rendered = render(hic);
-    const [tag, attrs, ...children] = rendered;
+    const [tag, attrs, ...children] = hic;
+    const prevHic = el._hic;
+    const [prevTag, prevAttrs, ...prevChildren] = prevHic;
 
-    if (el.tagName !== tag) {
-	const newEl = hiccupToElement(rendered);
-	el.parentNode.replaceChild(el, hiccupToElement(rendered));
+    if (prevTag !== tag) {
+	const newEl = hiccupToElement(hic);
+	hostEl.replaceChild(newEl, el);
 	return newEl;
     }
 
-    // Iterate through each attribute and update.
-    // This is where it would be handy to track the currently set attributes on the node
-    // (And probably why you'd want to store the previous elements)
-
-    reset(el, rendered);
+    return mergeElementWithAttrs(el, attrs);
 }
-
-const updateNode = (prev, next) => {
-
-    if (!prev.isEqualNode(next)) {
-	// TODO
-    }
-
-    return prev;
-};
 
 //
 // Utils
@@ -172,11 +168,9 @@ const isHic = (thing) => Array.isArray(thing) && thing.length > 1 && typeof thin
 const hic = (name, options, ...children) => {
     // Children could be a single argument that is an array of elements.
     // This happens in the case that children is an attr of a custom Component.
-    if (children.length === 1 && Array.isArray(children[0]) && !isHic(children[0])) {
-	return [name, options || {}, ...children[0]];
-    }
-
-    return [name, options || {}, ...children];
+    const isChildArray = children.length === 1 && Array.isArray(children[0]) && !isHic(children[0])
+    const actualChildren = isChildArray ? children[0] : children;
+    return [name, options || {}, ...actualChildren];
 }
 
 //
@@ -218,10 +212,10 @@ const Mousepad = ({ pos: [x, y], setPos: setCursorPosition }) => {
 	</div>
     );
 };
-cursorPositionAtom.addTrigger((pos, setPos) => update(mousepadEl, <Mousepad pos={pos} setPos={setPos} />));
+cursorPositionAtom.addTrigger((pos, setPos) => apply(mousepadEl, <Mousepad pos={pos} setPos={setPos} />));
 cursorPositionAtom.set([0, 0]);
 
-myAtom.addTrigger((count, setCount) => update(mainEl, <Counter count={count} setCount={setCount} />));
+myAtom.addTrigger((count, setCount) => apply(mainEl, <Counter count={count} setCount={setCount} />));
 
 /**
    An example of a custom component being rendered within a component.
@@ -233,14 +227,14 @@ const ManyDots = ({ count, setCount }) => (
 	</p>
     </UpsideDown>
 );
-cursorPositionAtom.addTrigger((pos) => update(mainEl, <ManyDots count={pos[0]} />));
+cursorPositionAtom.addTrigger((pos) => apply(mainEl, <ManyDots count={pos[0]} />));
 
 // Let's add a text box too
 const CounterEditor = ({ count, setCount }) => (
     <input input={(e) => setCount(Number(e.target.value))} value={count} />
 );
 
-myAtom.addTrigger((count, setCount) => update(counterEditorEl, <CounterEditor count={count} setCount={setCount} />));
+myAtom.addTrigger((count, setCount) => apply(counterEditorEl, <CounterEditor count={count} setCount={setCount} />));
 
 myAtom.set(0);
 
