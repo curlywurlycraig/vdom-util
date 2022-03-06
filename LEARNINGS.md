@@ -6,3 +6,4 @@ determining if some array is a hiccup array or just a list of
 children).
 
 
+`el.setAttribute('value', 10)` does not update the view for some reason. You need to do `el.value = 10` instead

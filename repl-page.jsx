@@ -2,6 +2,8 @@
 // Hiccupjs
 //
 
+const isHic = (thing) => Array.isArray(thing) && thing.length > 1 && typeof thing[1] === 'object' && !Array.isArray(thing[1]);
+
 /**
  * Adds a dictionary representation of the HTMLElement
  * to the element
@@ -14,14 +16,22 @@
  * @param {Object} attrs 
  */
 const updateAttrs = (el, attrs) => {
+  const [, prevAttrs] = el._hic ? el._hic : [];
+
   Object
     .entries(attrs)
-    .forEach([k, v] => { 
-      if (typeof ent[1] === 'function') {
-        const [ eventName, fn ] = ent
-        el.addEventListener(eventName.toLowerCase(), fn)
+    .forEach(([k, v]) => { 
+      if (prevAttrs && typeof prevAttrs[k] === 'function') {
+        el.removeEventListener(k, prevAttrs[k]);
+      }
+
+      if (typeof v === 'function') {
+        el.addEventListener(k.toLowerCase(), v);
+      } else if (k === 'value') {
+        // Weird specific case. The view doesn't update if you do el.setAttribute('value', 10) on an input element.
+        el.value = v;
       } else {
-        el.setAttribute(...ent)
+        el.setAttribute(k, v);
       }
     })
 
@@ -121,12 +131,20 @@ const update = (el, hic) => {
   const [prevTag, prevAttrs, ...prevChildren] = prevHic;
 
   if (prevTag !== tag) {
-    const newEl = hiccupToElement(hic);
-    hostEl.replaceChild(newEl, el);
-    return newEl;
+    return reset(el, hic)
   }
 
-  return updateAttrs(el, attrs);
+  const newEl = updateAttrs(el, attrs);
+  const newChildren = children.map((child, idx) => {
+    if (isHic(child)) {
+      return update(el.children[idx], child);
+    }
+
+    return child;
+  });
+  el.replaceChildren(...newChildren);
+  el._hic = hic;
+  return el;
 }
 
 //
@@ -161,8 +179,6 @@ const atom = (initialValue) => {
 */
 const style = (obj) =>
       Object.entries(obj).reduce((acc, [k, v]) => `${acc}; ${k}: ${v}; `, '')
-
-const isHic = (thing) => Array.isArray(thing) && thing.length > 1 && typeof thing[1] === 'object' && !Array.isArray(thing[1]);
 
 /**
    Conform to the jsx factory signature to produce hiccup.
