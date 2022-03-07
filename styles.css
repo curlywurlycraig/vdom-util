@@ -14,6 +14,9 @@ a:focus {
     border-radius: 2px;
     outline: 1px solid #ffc;
     outline-offset: 2px;
+
+    /* Makes the element appear above others. */
+    position: relative;
 }
 
 button {
@@ -28,6 +31,9 @@ button:focus {
     outline: 1px solid #aa8;
     background-image: linear-gradient(to bottom right, #334 0%, #663 100%);
     outline-offset: 2px;
+
+    /* Makes the element appear above others. */
+    position: relative;
 }
 
 button:hover {
