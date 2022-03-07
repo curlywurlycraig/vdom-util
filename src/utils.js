@@ -1,7 +1,3 @@
-//
-// Hiccupjs
-//
-
 const isHic = (thing) => Array.isArray(thing) && thing.length > 1 && typeof thing[1] === 'object' && !Array.isArray(thing[1]);
 
 /**
@@ -16,7 +12,7 @@ const isHic = (thing) => Array.isArray(thing) && thing.length > 1 && typeof thin
  * @param {Object} attrs 
  */
 const updateAttrs = (el, attrs) => {
-  const [, prevAttrs] = el._hic ? el._hic : [];
+  const [, prevAttrs] = el._hic || [];
 
   Object
     .entries(attrs)
@@ -131,21 +127,26 @@ const update = (el, hic) => {
   const [prevTag, prevAttrs, ...prevChildren] = prevHic;
 
   if (prevTag !== tag) {
-    return reset(el, hic)
+    return reset(el.parentNode, hic);
   }
 
-  const newEl = updateAttrs(el, attrs);
-  const newChildren = children.map((child, idx) => {
+  updateAttrs(el, attrs);
+  children.forEach((child, idx) => {
     if (isHic(child)) {
-      if (!el.children[idx]) {
-        return hiccupToElement(child);
+      if (!el.childNodes[idx]) {
+        const newEl = hiccupToElement(child);
+        el.appendChild(newEl);
       }
-      return update(el.children[idx], child);
+
+      update(el.childNodes[idx], child);
     }
 
-    return child;
+    if (!el.childNodes[idx]) {
+      el.appendChild(document.createTextNode(child));
+    } else {
+      el.childNodes[idx].nodeValue = child;
+    }
   });
-  el.replaceChildren(...newChildren);
   el._hic = hic;
   return el;
 }

@@ -5,18 +5,18 @@ const mousepadEl = document.getElementById("mousepad");
 const extraEl = document.getElementById("extra");
 const counterEditorEl = document.getElementById("editor");
 
-const UpsideDown = ({ children }) => (
-  <div style={style({transform: 'rotate(180deg)'})}>
+const Outlined = ({ children }) => (
+  <div style={style({border: '1px solid #445', padding: '10px'})}>
     { children }
   </div>
 );
 
-const myAtom = atom(0);
+const counterAtom = atom(0);
 const Counter = ({ count, setCount }) => (
-  <UpsideDown>
+  <Outlined>
     <p>count is {count}</p>
     <button click={() => setCount(count + 1)}>increment</button>
-  </UpsideDown>
+  </Outlined>
 );
 
 const cursorPositionAtom = atom([0, 0]);
@@ -38,30 +38,33 @@ const Mousepad = ({ pos: [x, y], setPos: setCursorPosition }) => {
 cursorPositionAtom.addTrigger((pos, setPos) => apply(mousepadEl, <Mousepad pos={pos} setPos={setPos} />));
 cursorPositionAtom.set([0, 0]);
 
-myAtom.addTrigger((count, setCount) => apply(mainEl, <Counter count={count} setCount={setCount} />));
+counterAtom.addTrigger((count, setCount) => apply(mainEl, <Counter count={count} setCount={setCount} />));
 
 /**
    An example of a custom component being rendered within a component.
 */
 const ManyDots = ({ count, setCount }) => (
-  <UpsideDown>
-    <p>
-      { new Array(count).fill('.') }
-    </p>
-  </UpsideDown>
+  <p>
+    { new Array(count).fill('.') }
+  </p>
 );
-cursorPositionAtom.addTrigger((pos) => apply(mainEl, <ManyDots count={pos[0]} />));
 
 // Let's add a text box too
 const CounterEditor = ({ count, setCount }) => (
   <input input={(e) => setCount(Number(e.target.value))} value={count} />
 );
 
-myAtom.addTrigger((count, setCount) => apply(counterEditorEl, <CounterEditor count={count} setCount={setCount} />));
+counterAtom.addTrigger((count, setCount) => apply(counterEditorEl, <CounterEditor count={count} setCount={setCount} />));
 
-myAtom.set(0);
+counterAtom.set(0);
+
+const otherCounterAtom = atom(0);
+otherCounterAtom.addTrigger((value) => apply(mainEl, <ManyDots count={value} />));
+
+apply(mousepadEl, <button click={() => otherCounterAtom.set(otherCounterAtom.value + 1)}>Click me</button>);
+
 
 // setInterval(() => {
-//     myAtom.set(myAtom.value + 1);
+//   counterAtom.set(counterAtom.value + 1);
 // }, 1000);
 

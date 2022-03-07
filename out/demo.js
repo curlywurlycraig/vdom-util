@@ -1,1 +1,171 @@
-(()=>{var A=t=>Array.isArray(t)&&t.length>1&&typeof t[1]=="object"&&!Array.isArray(t[1]),v=(t,e)=>{let[,r]=t._hic?t._hic:[];return Object.entries(e).forEach(([n,o])=>{r&&typeof r[n]=="function"&&t.removeEventListener(n,r[n]),typeof o=="function"?t.addEventListener(n.toLowerCase(),o):n==="value"?t.value=o:t.setAttribute(n,o)}),t},d=([t,...e])=>{let n=!Array.isArray(e[0])&&typeof e[0]=="object"?[t,e[0],...e.slice(1)]:[t,{},...e],o=w(...n);return o._hic=n,o},w=(t,e,...r)=>{let n=v(document.createElement(t),e);return(i=>i.map(s=>Array.isArray(s)&&s.length===0?"":s).map(s=>typeof s=="string"||typeof s=="number"?s:d(s)))(r).reduce((i,s)=>(i.append(s),i),n)},p=([t,e,...r])=>{if(typeof t=="function")return p(t({...e,children:r}));let n=r.map(o=>Array.isArray(o)&&o.length?p(o):o);return[t,e,...n]},C=(t,e)=>(t.innerHTML="",t.appendChild(d(p(e))),t),c=(t,e)=>{let r=t.children[0];return!r||r._hic===void 0?C(t,e):E(r,p(e))},E=(t,e)=>{let[r,n,...o]=e,i=t._hic,[s,I,...L]=i;if(s!==r)return C(t,e);let H=v(t,n),T=o.map((a,g)=>A(a)?t.children[g]?E(t.children[g],a):d(a):a);return t.replaceChildren(...T),t._hic=e,t},y=t=>{let e={triggers:[],value:t,addTrigger:r=>{e.triggers.push(r)},set:r=>{e.value=r,e.triggers.forEach(n=>n(r,e.set,e))}};return e},m=t=>Object.entries(t).reduce((e,[r,n])=>`${e}; ${r}: ${n}; `,""),u=(t,e,...r)=>{let o=r.length===1&&Array.isArray(r[0])&&!A(r[0])?r[0]:r;return[t,e||{},...o]};var b=document.getElementById("main"),_=document.getElementById("mousepad"),O=document.getElementById("extra"),M=document.getElementById("editor"),h=({children:t})=>u("div",{style:m({transform:"rotate(180deg)"})},t),f=y(0),$=({count:t,setCount:e})=>u(h,null,u("p",null,"count is ",t),u("button",{click:()=>e(t+1)},"increment")),l=y([0,0]),j=({pos:[t,e],setPos:r})=>{let n=100*Math.min(t/200,1),o=255*Math.min(e/200,1),i=m({position:"relative",opacity:`${n}%`,color:`rgb(${o}, 255, 255)`});return u("div",{style:"width: 100%; height: 100%",mousemove:s=>r([s.offsetX,s.offsetY])},u("p",{style:i},"Cursor pos is ",t," ",e))};l.addTrigger((t,e)=>c(_,u(j,{pos:t,setPos:e})));l.set([0,0]);f.addTrigger((t,e)=>c(b,u($,{count:t,setCount:e})));var B=({count:t,setCount:e})=>u(h,null,u("p",null,new Array(t).fill(".")));l.addTrigger(t=>c(b,u(B,{count:t[0]})));var D=({count:t,setCount:e})=>u("input",{input:r=>e(Number(r.target.value)),value:t});f.addTrigger((t,e)=>c(M,u(D,{count:t,setCount:e})));f.set(0);})();
+(() => {
+  // src/utils.js
+  var isHic = (thing) => Array.isArray(thing) && thing.length > 1 && typeof thing[1] === "object" && !Array.isArray(thing[1]);
+  var updateAttrs = (el, attrs) => {
+    const [, prevAttrs] = el._hic || [];
+    Object.entries(attrs).forEach(([k, v]) => {
+      if (prevAttrs && typeof prevAttrs[k] === "function") {
+        el.removeEventListener(k, prevAttrs[k]);
+      }
+      if (typeof v === "function") {
+        el.addEventListener(k.toLowerCase(), v);
+      } else if (k === "value") {
+        el.value = v;
+      } else {
+        el.setAttribute(k, v);
+      }
+    });
+    return el;
+  };
+  var hiccupToElement = ([tag, ...rest]) => {
+    const hasAttrs = !Array.isArray(rest[0]) && typeof rest[0] === "object";
+    const hic2 = hasAttrs ? [tag, rest[0], ...rest.slice(1)] : [tag, {}, ...rest];
+    const result = hiccupToElementWithAttrs(...hic2);
+    result._hic = hic2;
+    return result;
+  };
+  var hiccupToElementWithAttrs = (tag, attrs, ...children) => {
+    const parsed = updateAttrs(document.createElement(tag), attrs);
+    const resolveChildren = (val) => {
+      return val.map((x) => {
+        if (Array.isArray(x) && x.length === 0) {
+          return "";
+        }
+        return x;
+      }).map((x) => {
+        if (typeof x === "string" || typeof x === "number") {
+          return x;
+        }
+        return hiccupToElement(x);
+      });
+    };
+    return resolveChildren(children).reduce((ac, x) => {
+      ac.append(x);
+      return ac;
+    }, parsed);
+  };
+  var render = ([tag, attrs, ...children]) => {
+    if (typeof tag === "function") {
+      return render(tag({ ...attrs, children }));
+    }
+    const renderedChildren = children.map((child) => {
+      if (Array.isArray(child) && child.length) {
+        return render(child);
+      }
+      return child;
+    });
+    return [tag, attrs, ...renderedChildren];
+  };
+  var reset = (el, hic2) => {
+    el.innerHTML = "";
+    el.appendChild(hiccupToElement(render(hic2)));
+    return el;
+  };
+  var apply = (hostEl, hic2) => {
+    const renderedChild = hostEl.children[0];
+    if (!renderedChild || renderedChild._hic === void 0) {
+      return reset(hostEl, hic2);
+    }
+    return update(renderedChild, render(hic2));
+  };
+  var update = (el, hic2) => {
+    const [tag, attrs, ...children] = hic2;
+    const prevHic = el._hic;
+    const [prevTag, prevAttrs, ...prevChildren] = prevHic;
+    if (prevTag !== tag) {
+      return reset(el.parentNode, hic2);
+    }
+    updateAttrs(el, attrs);
+    children.forEach((child, idx) => {
+      if (isHic(child)) {
+        if (!el.childNodes[idx]) {
+          const newEl = hiccupToElement(child);
+          el.appendChild(newEl);
+        }
+        update(el.childNodes[idx], child);
+      }
+      if (!el.childNodes[idx]) {
+        el.appendChild(document.createTextNode(child));
+      } else {
+        el.childNodes[idx].nodeValue = child;
+      }
+    });
+    el._hic = hic2;
+    return el;
+  };
+  var atom = (initialValue) => {
+    const result = {
+      triggers: [],
+      value: initialValue,
+      addTrigger: (trigger) => {
+        result.triggers.push(trigger);
+      },
+      set: (val) => {
+        result.value = val;
+        result.triggers.forEach((trig) => trig(val, result.set, result));
+      }
+    };
+    return result;
+  };
+  var style = (obj) => Object.entries(obj).reduce((acc, [k, v]) => `${acc}; ${k}: ${v}; `, "");
+  var hic = (name, options, ...children) => {
+    const isChildArray = children.length === 1 && Array.isArray(children[0]) && !isHic(children[0]);
+    const actualChildren = isChildArray ? children[0] : children;
+    return [name, options || {}, ...actualChildren];
+  };
+
+  // src/demo.jsx
+  var mainEl = document.getElementById("main");
+  var mousepadEl = document.getElementById("mousepad");
+  var extraEl = document.getElementById("extra");
+  var counterEditorEl = document.getElementById("editor");
+  var Outlined = ({ children }) => /* @__PURE__ */ hic("div", {
+    style: style({ border: "1px solid #445", padding: "10px" })
+  }, children);
+  var counterAtom = atom(0);
+  var Counter = ({ count, setCount }) => /* @__PURE__ */ hic(Outlined, null, /* @__PURE__ */ hic("p", null, "count is ", count), /* @__PURE__ */ hic("button", {
+    click: () => setCount(count + 1)
+  }, "increment"));
+  var cursorPositionAtom = atom([0, 0]);
+  var Mousepad = ({ pos: [x, y], setPos: setCursorPosition }) => {
+    const opacity = 100 * Math.min(x / 200, 1);
+    const red = 255 * Math.min(y / 200, 1);
+    const pStyle = style({
+      position: "relative",
+      opacity: `${opacity}%`,
+      color: `rgb(${red}, 255, 255)`
+    });
+    return /* @__PURE__ */ hic("div", {
+      style: "width: 100%; height: 100%",
+      mousemove: (e) => setCursorPosition([e.offsetX, e.offsetY])
+    }, /* @__PURE__ */ hic("p", {
+      style: pStyle
+    }, "Cursor pos is ", x, " ", y));
+  };
+  cursorPositionAtom.addTrigger((pos, setPos) => apply(mousepadEl, /* @__PURE__ */ hic(Mousepad, {
+    pos,
+    setPos
+  })));
+  cursorPositionAtom.set([0, 0]);
+  counterAtom.addTrigger((count, setCount) => apply(mainEl, /* @__PURE__ */ hic(Counter, {
+    count,
+    setCount
+  })));
+  var ManyDots = ({ count, setCount }) => /* @__PURE__ */ hic("p", null, new Array(count).fill("."));
+  var CounterEditor = ({ count, setCount }) => /* @__PURE__ */ hic("input", {
+    input: (e) => setCount(Number(e.target.value)),
+    value: count
+  });
+  counterAtom.addTrigger((count, setCount) => apply(counterEditorEl, /* @__PURE__ */ hic(CounterEditor, {
+    count,
+    setCount
+  })));
+  counterAtom.set(0);
+  var otherCounterAtom = atom(0);
+  otherCounterAtom.addTrigger((value) => apply(mainEl, /* @__PURE__ */ hic(ManyDots, {
+    count: value
+  })));
+  apply(mousepadEl, /* @__PURE__ */ hic("button", {
+    click: () => otherCounterAtom.set(otherCounterAtom.value + 1)
+  }, "Click me"));
+})();
