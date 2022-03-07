@@ -77,19 +77,20 @@
     }
     updateAttrs(el, attrs);
     children.forEach((child, idx) => {
-      if (isHic(child)) {
-        if (!el.childNodes[idx]) {
-          const newEl = hiccupToElement(child);
-          el.appendChild(newEl);
-        }
-        update(el.childNodes[idx], child);
-      }
       if (!el.childNodes[idx]) {
-        el.appendChild(document.createTextNode(child));
-      } else {
-        el.childNodes[idx].nodeValue = child;
+        const newEl = isHic(child) ? hiccupToElement(child) : document.createTextNode(child);
+        el.appendChild(newEl);
+        return;
       }
+      if (isHic(child)) {
+        update(el.childNodes[idx], child);
+        return;
+      }
+      el.childNodes[idx].nodeValue = child;
     });
+    for (var i = children.length; i < el.childNodes.length; i++) {
+      el.childNodes[i].remove();
+    }
     el._hic = hic2;
     return el;
   };
@@ -127,26 +128,6 @@
     click: () => setCount(count + 1)
   }, "increment"));
   var cursorPositionAtom = atom([0, 0]);
-  var Mousepad = ({ pos: [x, y], setPos: setCursorPosition }) => {
-    const opacity = 100 * Math.min(x / 200, 1);
-    const red = 255 * Math.min(y / 200, 1);
-    const pStyle = style({
-      position: "relative",
-      opacity: `${opacity}%`,
-      color: `rgb(${red}, 255, 255)`
-    });
-    return /* @__PURE__ */ hic("div", {
-      style: "width: 100%; height: 100%",
-      mousemove: (e) => setCursorPosition([e.offsetX, e.offsetY])
-    }, /* @__PURE__ */ hic("p", {
-      style: pStyle
-    }, "Cursor pos is ", x, " ", y));
-  };
-  cursorPositionAtom.addTrigger((pos, setPos) => apply(mousepadEl, /* @__PURE__ */ hic(Mousepad, {
-    pos,
-    setPos
-  })));
-  cursorPositionAtom.set([0, 0]);
   counterAtom.addTrigger((count, setCount) => apply(mainEl, /* @__PURE__ */ hic(Counter, {
     count,
     setCount
@@ -165,7 +146,9 @@
   otherCounterAtom.addTrigger((value) => apply(mainEl, /* @__PURE__ */ hic(ManyDots, {
     count: value
   })));
-  apply(mousepadEl, /* @__PURE__ */ hic("button", {
+  apply(mousepadEl, /* @__PURE__ */ hic("div", null, /* @__PURE__ */ hic("button", {
     click: () => otherCounterAtom.set(otherCounterAtom.value + 1)
-  }, "Click me"));
+  }, "+"), /* @__PURE__ */ hic("button", {
+    click: () => otherCounterAtom.set(otherCounterAtom.value - 1)
+  }, "-")));
 })();

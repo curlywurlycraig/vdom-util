@@ -131,22 +131,26 @@ const update = (el, hic) => {
   }
 
   updateAttrs(el, attrs);
+
   children.forEach((child, idx) => {
-    if (isHic(child)) {
-      if (!el.childNodes[idx]) {
-        const newEl = hiccupToElement(child);
-        el.appendChild(newEl);
-      }
-
-      update(el.childNodes[idx], child);
-    }
-
     if (!el.childNodes[idx]) {
-      el.appendChild(document.createTextNode(child));
-    } else {
-      el.childNodes[idx].nodeValue = child;
+      const newEl = isHic(child) ? hiccupToElement(child) : document.createTextNode(child);
+      el.appendChild(newEl);
+      return;
     }
+
+    if (isHic(child)) {
+      update(el.childNodes[idx], child);
+      return;
+    }
+
+    el.childNodes[idx].nodeValue = child;
   });
+
+  for (var i = children.length; i < el.childNodes.length; i++) {
+    el.childNodes[i].remove();
+  }
+
   el._hic = hic;
   return el;
 }

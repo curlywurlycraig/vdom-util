@@ -35,8 +35,8 @@ const Mousepad = ({ pos: [x, y], setPos: setCursorPosition }) => {
     </div>
   );
 };
-cursorPositionAtom.addTrigger((pos, setPos) => apply(mousepadEl, <Mousepad pos={pos} setPos={setPos} />));
-cursorPositionAtom.set([0, 0]);
+// cursorPositionAtom.addTrigger((pos, setPos) => apply(mousepadEl, <Mousepad pos={pos} setPos={setPos} />));
+// cursorPositionAtom.set([0, 0]);
 
 counterAtom.addTrigger((count, setCount) => apply(mainEl, <Counter count={count} setCount={setCount} />));
 
@@ -61,7 +61,11 @@ counterAtom.set(0);
 const otherCounterAtom = atom(0);
 otherCounterAtom.addTrigger((value) => apply(mainEl, <ManyDots count={value} />));
 
-apply(mousepadEl, <button click={() => otherCounterAtom.set(otherCounterAtom.value + 1)}>Click me</button>);
+apply(mousepadEl, <div>
+                    <button click={() => otherCounterAtom.set(otherCounterAtom.value + 1)}>+</button>
+                    <button click={() => otherCounterAtom.set(otherCounterAtom.value - 1)}>-</button>
+                  </div>
+     );
 
 
 // setInterval(() => {
