@@ -44,7 +44,9 @@ counterAtom.addTrigger((count, setCount) => apply(mainEl, <Counter count={count}
    An example of a custom component being rendered within a component.
 */
 const ManyDots = ({ count, setCount }) => (
-  <p>
+  <p style={style({
+       color: count > 5 ? 'yellow' : 'white'
+     })}>
     { new Array(count).fill('.') }
   </p>
 );
@@ -63,7 +65,7 @@ otherCounterAtom.addTrigger((value) => apply(mainEl, <ManyDots count={value} />)
 
 apply(mousepadEl, <div>
                     <button click={() => otherCounterAtom.set(otherCounterAtom.value + 1)}>+</button>
-                    <button click={() => otherCounterAtom.set(otherCounterAtom.value - 1)}>-</button>
+                    <button click={() => otherCounterAtom.set(Math.max(0, otherCounterAtom.value - 1))}>-</button>
                   </div>
      );
 

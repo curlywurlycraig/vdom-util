@@ -132,7 +132,11 @@
     count,
     setCount
   })));
-  var ManyDots = ({ count, setCount }) => /* @__PURE__ */ hic("p", null, new Array(count).fill("."));
+  var ManyDots = ({ count, setCount }) => /* @__PURE__ */ hic("p", {
+    style: style({
+      color: count > 5 ? "yellow" : "white"
+    })
+  }, new Array(count).fill("."));
   var CounterEditor = ({ count, setCount }) => /* @__PURE__ */ hic("input", {
     input: (e) => setCount(Number(e.target.value)),
     value: count
@@ -149,6 +153,6 @@
   apply(mousepadEl, /* @__PURE__ */ hic("div", null, /* @__PURE__ */ hic("button", {
     click: () => otherCounterAtom.set(otherCounterAtom.value + 1)
   }, "+"), /* @__PURE__ */ hic("button", {
-    click: () => otherCounterAtom.set(otherCounterAtom.value - 1)
+    click: () => otherCounterAtom.set(Math.max(0, otherCounterAtom.value - 1))
   }, "-")));
 })();
