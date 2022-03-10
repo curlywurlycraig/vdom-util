@@ -1,4 +1,4 @@
-import { style, atom, hic, apply } from "./utils.js";
+import { style, atom, hic, apply, replace } from "./utils.js";
 
 const mainEl = document.getElementById("main");
 const mousepadEl = document.getElementById("mousepad");
@@ -45,7 +45,10 @@ counterAtom.addTrigger((count, setCount) => apply(mainEl, <Counter count={count}
 */
 const ManyDots = ({ count, setCount }) => (
   <p style={style({
-       color: count > 5 ? 'yellow' : 'white'
+       color: count > 15 ? 'red'
+         : count > 10 ? 'orange'
+         : count > 5 ? 'yellow'
+         : 'white'
      })}>
     { new Array(count).fill('.') }
   </p>
@@ -63,14 +66,61 @@ counterAtom.set(0);
 const otherCounterAtom = atom(0);
 otherCounterAtom.addTrigger((value) => apply(mainEl, <ManyDots count={value} />));
 
-apply(mousepadEl, <div>
-                    <button click={() => otherCounterAtom.set(otherCounterAtom.value + 1)}>+</button>
-                    <button click={() => otherCounterAtom.set(Math.max(0, otherCounterAtom.value - 1))}>-</button>
-                  </div>
-     );
+apply(
+  mousepadEl,
+  <div>
+    <button click={() => otherCounterAtom.set(otherCounterAtom.value + 1)}>+</button>
+    <button click={() => otherCounterAtom.set(Math.max(0, otherCounterAtom.value - 1))}>-</button>
+  </div>
+);
 
+replace(document.getElementById('ellipse'), ({ children }) => <p>This used to be: { children }</p>);
 
-// setInterval(() => {
-//   counterAtom.set(counterAtom.value + 1);
-// }, 1000);
+const myThings = [
+  {
+    name: "Craig",
+    age: 28
+  },
+  {
+    name: "Meg",
+    age: 30
+  },
+  {
+    name: "Geordi",
+    age: 0.4
+  }
+];
 
+const TableSearch = ({ search, setSearch }) => {
+  const results = myThings.filter(thing => thing.name.includes(search)
+                                  || thing.age.toString().includes(search));
+  console.log('results are ', results);
+  return (
+    <div>
+      <input input={(e) => setSearch(e.target.value)} value={search} />
+      <table style={style({ margin: '10px' })}>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Age</th>
+            <th>An input</th>
+          </tr>
+        </thead>
+        <tbody>
+          { results.map(result => <tr>
+                                    <td>{ result.name }</td>
+                                    <td>{ result.age }</td>
+                                    <td><input /></td>
+                                  </tr>)}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+const searchTerm = atom('');
+searchTerm.addTrigger((search, setSearch) =>
+  apply(document.getElementById('searcher'),
+        <TableSearch search={search} setSearch={setSearch} />));
+
+searchTerm.set('');

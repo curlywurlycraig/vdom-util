@@ -80,3 +80,12 @@ main {
     height: 200px;
     background-color: #fff1;
 }
+
+table {
+    border-collapse: collapse;
+}
+
+td, th {
+    padding: 3px 5px;
+    border: 1px solid #557
+}

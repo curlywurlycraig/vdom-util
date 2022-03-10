@@ -7,12 +7,39 @@
 
   <body>
     <main>
-	<div id="main">JS is required for this page to work correctly.</div>
-	<div id="extra"></div>
-	<div id="editor"></div>
-	<div id="mousepad"></div>
+      <div id="main">JS is required for this page to work correctly.</div>
+      <div id="extra"></div>
+      <div id="editor"></div>
+      <div id="mousepad"></div>
+
+      <svg>
+	<defs>
+	  <pattern id="transformedPattern"
+		   x="10" y="10" width="20" height="20"
+		   patternUnits="userSpaceOnUse"
+		   patternTransform="rotate(35)"
+		   >
+
+	    <circle cx="10" cy="10" r="1" style="stroke: none; fill: #8888dd" />
+
+	  </pattern>
+	</defs>
+
+	<circle cx="20" cy="20" r="1000" 
+	      style="stroke: none;
+		     fill: url(#transformedPattern);" />
+      </svg>
+
+      <p id="ellipse">This text is shortened and given a hover state when JS is enabled.</p>
+
+
+      <div id="searcher"></div>
     </main>
+
+
   </body>
 
   <script src="./out/demo.js"></script>
+
+
 </html>

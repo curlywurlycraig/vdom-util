@@ -1,4 +1,11 @@
-const isHic = (thing) => Array.isArray(thing) && thing.length > 1 && typeof thing[1] === 'object' && !Array.isArray(thing[1]);
+/**
+ * Sort of hacky way to determine if some argument is a hic representation.
+ */
+const isHic = (thing) =>
+      Array.isArray(thing)
+      && thing.length > 1
+      && typeof thing[1] === 'object'
+      && !Array.isArray(thing[1]);
 
 /**
  * Adds a dictionary representation of the HTMLElement
@@ -23,10 +30,11 @@ const updateAttrs = (el, attrs) => {
 
       if (typeof v === 'function') {
         el.addEventListener(k.toLowerCase(), v);
-      } else if (k === 'value') {
-        // Weird specific case. The view doesn't update if you do el.setAttribute('value', 10) on an input element.
-        el.value = v;
       } else {
+        // Weird specific case. The view doesn't update if you do el.setAttribute('value', 10) on an input element.
+        if (k === 'value') {
+          el.value = v;
+        }
         el.setAttribute(k, v);
       }
     })
@@ -34,7 +42,7 @@ const updateAttrs = (el, attrs) => {
   return el;
 }
 
-const hiccupToElement = ([tag, ...rest]) => {
+export const hiccupToElement = ([tag, ...rest]) => {
   const hasAttrs = !Array.isArray(rest[0]) && typeof rest[0] === 'object';
   const hic = hasAttrs
         ? [tag, rest[0], ...rest.slice(1)]
@@ -45,7 +53,40 @@ const hiccupToElement = ([tag, ...rest]) => {
   // This is basically like a virtual dom but stored on the real dom for convenience.
   result._hic = hic;
   return result;
+};
+
+/**
+ * Attrs is a NamedNodeMap.
+ * https://developer.mozilla.org/en-US/docs/Web/API/NamedNodeMap
+ */
+const attrsToHiccup = (attrs) => {
+  const result = {};
+  for (var i = 0; i < attrs.length; i++) {
+    const attr = attrs[i];
+    result[attr.name] = attr.value;
+  }
+  return result;
 }
+
+/**
+ * Given some HTML element, recursively determine its hic representation.
+ */
+export const elementToHiccup = (el) => {
+  if (el.nodeType !== 1) {
+    return el.nodeValue;
+  }
+
+  const tagName = el.tagName;
+  const attrs = el.attributes;
+  const children = el.childNodes;
+
+  const childrenHiccup = [];
+  for (var i = 0; i < children.length; i++) {
+    childrenHiccup.push(elementToHiccup(children[i]));
+  }
+
+  return [tagName.toLowerCase(), attrsToHiccup(attrs), ...childrenHiccup];
+};
 
 const hiccupToElementWithAttrs = (tag, attrs, ...children) => {
   const parsed = updateAttrs(document.createElement(tag), attrs)
@@ -147,12 +188,19 @@ const update = (el, hic) => {
     el.childNodes[idx].nodeValue = child;
   });
 
-  for (var i = children.length; i < el.childNodes.length; i++) {
-    el.childNodes[i].remove();
+  // Delete remaining children
+  while (el.childNodes.length > children.length) {
+    el.childNodes[children.length].remove();
   }
 
   el._hic = hic;
   return el;
+}
+
+export const replace = (el, renderFunc) => {
+  const previousHic = elementToHiccup(el);
+  const renderedHic = render(renderFunc({ children: previousHic }));
+  reset(el, renderedHic);
 }
 
 //
