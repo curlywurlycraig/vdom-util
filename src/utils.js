@@ -104,8 +104,8 @@ const hiccupToElementWithAttrs = (tag, attrs, ...children) => {
         return x
       })
       .map(x => {
-        if (typeof x === 'string' || typeof x === 'number') {  
-          return x
+        if (typeof x === 'string' || typeof x === 'number' || !x) {  
+          return x;
         }
         
         return hiccupToElement(x)
@@ -130,12 +130,13 @@ const render = ([tag, attrs, ...children]) => {
     return render(tag({ ...attrs, children }));
   }
 
-  const renderedChildren = children.map(child => {
-    if (Array.isArray(child) && child.length) {
-      return render(child);
-    }
-    return child;
-  });
+  const renderedChildren = children
+        .map(child => {
+          if (Array.isArray(child) && child.length) {
+            return render(child);
+          }
+          return child;
+        });
 
   return [tag, attrs, ...renderedChildren];
 };
@@ -201,6 +202,10 @@ const update = (el, hic) => {
   return el;
 }
 
+/**
+ * Given some existing element, replace the contents of that element by calling a render function.
+ * The render function is passed the contents of what is being replaced as hic.
+ */
 export const replace = (el, renderFunc) => {
   const previousHic = elementToHiccup(el);
   const renderedHic = render(renderFunc({ children: previousHic }));

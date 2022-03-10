@@ -6,7 +6,6 @@ https://developer.mozilla.org/en-US/docs/Web/API/Node/
 
 - [ ] Find a way to get rid of the logic that hiccupToElement needs
 Basically refactor `hiccupToElement` and `apply` so that there's less duplication
-- [ ] Make convenience connectors so that it is easy to make a component with multiple pieces of state
 - [ ] Write tests
 - [ ] Handle deletion of attrs in updateAttrs
 - [ ] Try out some more complex use cases

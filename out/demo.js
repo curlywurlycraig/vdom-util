@@ -1,1 +1,255 @@
-(()=>{var f=t=>Array.isArray(t)&&t.length>1&&typeof t[1]=="object"&&!Array.isArray(t[1]),E=(t,e)=>{let[,r]=t._hic||[];return Object.entries(e).forEach(([n,o])=>{r&&typeof r[n]=="function"&&t.removeEventListener(n,r[n]),typeof o=="function"?t.addEventListener(n.toLowerCase(),o):(n==="value"&&(t.value=o),t.setAttribute(n,o))}),t},v=([t,...e])=>{let n=!Array.isArray(e[0])&&typeof e[0]=="object"?[t,e[0],...e.slice(1)]:[t,{},...e],o=B(...n);return o._hic=n,o},w=t=>{let e={};for(var r=0;r<t.length;r++){let n=t[r];e[n.name]=n.value}return e},m=t=>{if(t._hic)return t._hic;if(t.nodeType!==1)return t.nodeValue;let e=t.tagName,r=t.attributes,n=t.childNodes,o=[];for(var u=0;u<n.length;u++)o.push(m(n[u]));return[e.toLowerCase(),w(r),...o]},B=(t,e,...r)=>{let n=E(document.createElement(t),e);return(u=>u.map(a=>Array.isArray(a)&&a.length===0?"":a).map(a=>typeof a=="string"||typeof a=="number"?a:v(a)))(r).reduce((u,a)=>(u.append(a),u),n)},i=([t,e,...r])=>{if(typeof t=="function")return i(t({...e,children:r}));let n=r.map(o=>Array.isArray(o)&&o.length?i(o):o);return[t,e,...n]},A=(t,e)=>(t.innerHTML="",t.appendChild(v(i(e))),t),d=(t,e)=>{let r=t.children[0];return!r||r._hic===void 0?A(t,e):C(r,i(e))},C=(t,e)=>{let[r,n,...o]=e,u=t._hic,[a,O,...P]=u;if(a!==r)return A(t.parentNode,e);for(E(t,n),o.forEach((c,y)=>{if(!t.childNodes[y]){let H=f(c)?v(c):document.createTextNode(c);t.appendChild(H);return}if(f(c)){C(t.childNodes[y],c);return}t.childNodes[y].nodeValue=c});t.childNodes.length>o.length;)t.childNodes[o.length].remove();return t._hic=e,t},T=(t,e)=>{let r=m(t),n=i(e({children:r}));A(t,n)},p=t=>{let e={triggers:[],value:t,addTrigger:r=>{e.triggers.push(r)},set:r=>{e.value=r,e.triggers.forEach(n=>n(r,e.set,e))}};return e},g=t=>Object.entries(t).reduce((e,[r,n])=>`${e}; ${r}: ${n}; `,""),s=(t,e,...r)=>{let o=r.length===1&&Array.isArray(r[0])&&!f(r[0])?r[0]:r;return[t,e||{},...o]};var N=document.getElementById("main"),I=document.getElementById("mousepad"),D=document.getElementById("extra"),M=document.getElementById("editor"),_=({children:t})=>s("div",{style:g({border:"1px solid #445",padding:"10px"})},t),h=p(0),x=({count:t,setCount:e})=>s(_,null,s("p",null,"count is ",t),s("button",{click:()=>e(t+1)},"increment")),G=p([0,0]);h.addTrigger((t,e)=>d(N,s(x,{count:t,setCount:e})));var S=({count:t,setCount:e})=>s("p",{style:g({color:t>15?"red":t>10?"orange":t>5?"yellow":"white"})},new Array(t).fill(".")),L=({count:t,setCount:e})=>s("input",{input:r=>e(Number(r.target.value)),value:t});h.addTrigger((t,e)=>d(M,s(L,{count:t,setCount:e})));h.set(0);var l=p(0);l.addTrigger(t=>d(N,s(S,{count:t})));d(I,s("div",null,s("button",{click:()=>l.set(l.value+1)},"+"),s("button",{click:()=>l.set(Math.max(0,l.value-1))},"-")));T(document.getElementById("ellipse"),({children:t})=>s("p",null,"This used to be: ",t));var $=[{name:"Craig",age:28},{name:"Meg",age:30},{name:"Geordi",age:.4}],j=({search:t,setSearch:e,items:r})=>{let n=r.filter(o=>o.name.includes(t)||o.age.toString().includes(t));return s("div",null,s("input",{placeholder:"Search table",input:o=>e(o.target.value),value:t}),s("table",{style:g({margin:"10px"})},s("thead",null,s("tr",null,s("th",null,"Name"),s("th",null,"Age"),s("th",null,"An input"))),s("tbody",null,n.map(o=>s("tr",null,s("td",null,o.name),s("td",null,o.age),s("td",null,s("input",null)))))))},b=p("");b.addTrigger((t,e)=>d(document.getElementById("searcher"),s(j,{search:t,setSearch:e,items:$})));b.set("");b.addTrigger(()=>d(document.getElementById("svg-dupe"),m(document.querySelector("#searcher"))));})();
+(() => {
+  // src/utils.js
+  var isHic = (thing) => Array.isArray(thing) && thing.length > 1 && typeof thing[1] === "object" && !Array.isArray(thing[1]);
+  var updateAttrs = (el, attrs) => {
+    const [, prevAttrs] = el._hic || [];
+    Object.entries(attrs).forEach(([k, v]) => {
+      if (prevAttrs && typeof prevAttrs[k] === "function") {
+        el.removeEventListener(k, prevAttrs[k]);
+      }
+      if (typeof v === "function") {
+        el.addEventListener(k.toLowerCase(), v);
+      } else {
+        if (k === "value") {
+          el.value = v;
+        }
+        el.setAttribute(k, v);
+      }
+    });
+    return el;
+  };
+  var hiccupToElement = ([tag, ...rest]) => {
+    const hasAttrs = !Array.isArray(rest[0]) && typeof rest[0] === "object";
+    const hic2 = hasAttrs ? [tag, rest[0], ...rest.slice(1)] : [tag, {}, ...rest];
+    const result = hiccupToElementWithAttrs(...hic2);
+    result._hic = hic2;
+    return result;
+  };
+  var attrsToHiccup = (attrs) => {
+    const result = {};
+    for (var i = 0; i < attrs.length; i++) {
+      const attr = attrs[i];
+      result[attr.name] = attr.value;
+    }
+    return result;
+  };
+  var elementToHiccup = (el) => {
+    if (el._hic) {
+      return el._hic;
+    }
+    if (el.nodeType !== 1) {
+      return el.nodeValue;
+    }
+    const tagName = el.tagName;
+    const attrs = el.attributes;
+    const children = el.childNodes;
+    const childrenHiccup = [];
+    for (var i = 0; i < children.length; i++) {
+      childrenHiccup.push(elementToHiccup(children[i]));
+    }
+    return [tagName.toLowerCase(), attrsToHiccup(attrs), ...childrenHiccup];
+  };
+  var hiccupToElementWithAttrs = (tag, attrs, ...children) => {
+    const parsed = updateAttrs(document.createElement(tag), attrs);
+    const resolveChildren = (val) => {
+      return val.map((x) => {
+        if (Array.isArray(x) && x.length === 0) {
+          return "";
+        }
+        return x;
+      }).map((x) => {
+        if (typeof x === "string" || typeof x === "number" || !x) {
+          return x;
+        }
+        return hiccupToElement(x);
+      });
+    };
+    return resolveChildren(children).reduce((ac, x) => {
+      ac.append(x);
+      return ac;
+    }, parsed);
+  };
+  var render = ([tag, attrs, ...children]) => {
+    if (typeof tag === "function") {
+      return render(tag({ ...attrs, children }));
+    }
+    const renderedChildren = children.map((child) => {
+      if (Array.isArray(child) && child.length) {
+        return render(child);
+      }
+      return child;
+    });
+    return [tag, attrs, ...renderedChildren];
+  };
+  var reset = (el, hic2) => {
+    el.innerHTML = "";
+    el.appendChild(hiccupToElement(render(hic2)));
+    return el;
+  };
+  var apply = (hostEl, hic2) => {
+    const renderedChild = hostEl.children[0];
+    if (!renderedChild || renderedChild._hic === void 0) {
+      return reset(hostEl, hic2);
+    }
+    return update(renderedChild, render(hic2));
+  };
+  var update = (el, hic2) => {
+    const [tag, attrs, ...children] = hic2;
+    const prevHic = el._hic;
+    const [prevTag, prevAttrs, ...prevChildren] = prevHic;
+    if (prevTag !== tag) {
+      return reset(el.parentNode, hic2);
+    }
+    updateAttrs(el, attrs);
+    children.forEach((child, idx) => {
+      if (!el.childNodes[idx]) {
+        const newEl = isHic(child) ? hiccupToElement(child) : document.createTextNode(child);
+        el.appendChild(newEl);
+        return;
+      }
+      if (isHic(child)) {
+        update(el.childNodes[idx], child);
+        return;
+      }
+      el.childNodes[idx].nodeValue = child;
+    });
+    while (el.childNodes.length > children.length) {
+      el.childNodes[children.length].remove();
+    }
+    el._hic = hic2;
+    return el;
+  };
+  var replace = (el, renderFunc) => {
+    const previousHic = elementToHiccup(el);
+    const renderedHic = render(renderFunc({ children: previousHic }));
+    reset(el, renderedHic);
+  };
+  var atom = (initialValue) => {
+    const result = {
+      triggers: [],
+      value: initialValue,
+      addTrigger: (trigger) => {
+        result.triggers.push(trigger);
+      },
+      set: (val) => {
+        result.value = val;
+        result.triggers.forEach((trig) => trig(val, result.set, result));
+      }
+    };
+    return result;
+  };
+  var style = (obj) => Object.entries(obj).reduce((acc, [k, v]) => `${acc}; ${k}: ${v}; `, "");
+  var hic = (name, options, ...children) => {
+    const isChildArray = children.length === 1 && Array.isArray(children[0]) && !isHic(children[0]);
+    const actualChildren = isChildArray ? children[0] : children;
+    return [name, options || {}, ...actualChildren];
+  };
+
+  // src/demo.jsx
+  var mainEl = document.getElementById("main");
+  var mousepadEl = document.getElementById("mousepad");
+  var extraEl = document.getElementById("extra");
+  var counterEditorEl = document.getElementById("editor");
+  var Outlined = ({ children }) => /* @__PURE__ */ hic("div", {
+    style: style({ border: "1px solid #445", padding: "10px" })
+  }, children);
+  var counterAtom = atom(0);
+  var Counter = ({ count, setCount }) => /* @__PURE__ */ hic(Outlined, null, /* @__PURE__ */ hic("p", null, "count is ", count), /* @__PURE__ */ hic("button", {
+    click: () => setCount(count + 1)
+  }, "increment"));
+  counterAtom.addTrigger((count, setCount) => apply(mainEl, /* @__PURE__ */ hic(Counter, {
+    count,
+    setCount
+  })));
+  var ManyDots = ({ count, setCount }) => /* @__PURE__ */ hic("p", {
+    style: style({
+      color: count > 15 ? "red" : count > 10 ? "orange" : count > 5 ? "yellow" : "white"
+    })
+  }, new Array(count).fill("."));
+  var CounterEditor = ({ count, setCount }) => /* @__PURE__ */ hic("input", {
+    input: (e) => setCount(Number(e.target.value)),
+    value: count
+  });
+  var dep = (deps, func) => {
+    const runFunc = () => func(deps);
+    Object.values(deps).forEach((dep2) => dep2.addTrigger(runFunc));
+    runFunc();
+  };
+  dep({ count: counterAtom }, ({ count }) => {
+    const setCount = (newCount) => {
+      if (!isNaN(newCount)) {
+        count.set(newCount);
+      }
+    };
+    apply(counterEditorEl, /* @__PURE__ */ hic(CounterEditor, {
+      count: count.value,
+      setCount
+    }));
+  });
+  counterAtom.set(0);
+  var otherCounterAtom = atom(0);
+  otherCounterAtom.addTrigger((value) => apply(mainEl, /* @__PURE__ */ hic(ManyDots, {
+    count: value
+  })));
+  apply(mousepadEl, /* @__PURE__ */ hic("div", null, /* @__PURE__ */ hic("button", {
+    click: () => otherCounterAtom.set(otherCounterAtom.value + 1)
+  }, "+"), /* @__PURE__ */ hic("button", {
+    click: () => otherCounterAtom.set(Math.max(0, otherCounterAtom.value - 1))
+  }, "-")));
+  replace(document.getElementById("ellipse"), ({ children }) => /* @__PURE__ */ hic("p", null, "This used to be: ", children));
+  var myThings = [
+    {
+      name: "Craig",
+      age: 28
+    },
+    {
+      name: "Meg",
+      age: 30
+    },
+    {
+      name: "Geordi",
+      age: 0.4
+    }
+  ];
+  for (i = 0; i < 1e3; i++) {
+    myThings.push({ name: `Player_${i}`, age: i });
+  }
+  var i;
+  var TableSearch = ({ search, setSearch, items }) => {
+    const results = items.filter((thing) => thing.name.toLowerCase().includes(search.toLowerCase()) || thing.age.toString().includes(search));
+    return /* @__PURE__ */ hic("div", null, /* @__PURE__ */ hic("input", {
+      placeholder: "Search table",
+      input: (e) => setSearch(e.target.value),
+      value: search
+    }), /* @__PURE__ */ hic("table", {
+      style: style({ margin: "10px" })
+    }, /* @__PURE__ */ hic("thead", null, /* @__PURE__ */ hic("tr", null, /* @__PURE__ */ hic("th", null, "Name"), /* @__PURE__ */ hic("th", null, "Age"), /* @__PURE__ */ hic("th", null, "An input"))), /* @__PURE__ */ hic("tbody", null, results.map((result) => /* @__PURE__ */ hic("tr", null, /* @__PURE__ */ hic("td", null, result.name), /* @__PURE__ */ hic("td", null, result.age), /* @__PURE__ */ hic("td", null, /* @__PURE__ */ hic("input", null)))))));
+  };
+  var searchTerm = atom("");
+  searchTerm.addTrigger((search, setSearch) => apply(document.getElementById("searcher"), /* @__PURE__ */ hic(TableSearch, {
+    search,
+    setSearch,
+    items: myThings
+  })));
+  searchTerm.set("");
+  var PackageJsonFetcher = ({ isFetching, result, onClickFetch }) => /* @__PURE__ */ hic("div", null, isFetching ? "fetching..." : null, result ? `got ${result}` : null, /* @__PURE__ */ hic("button", {
+    click: onClickFetch
+  }, "Click to get the author of this package"));
+  dep({
+    isFetching: atom(false),
+    result: atom(null)
+  }, ({ isFetching, result }) => {
+    const doFetch = async () => {
+      isFetching.set(true);
+      const fetchResult = await fetch("package.json");
+      const jsonResult = await fetchResult.json();
+      isFetching.set(false);
+      result.set(jsonResult.author);
+    };
+    apply(document.getElementById("package-json-fetcher"), /* @__PURE__ */ hic(PackageJsonFetcher, {
+      isFetching: isFetching.value,
+      result: result.value,
+      onClickFetch: doFetch
+    }));
+  });
+})();

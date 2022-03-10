@@ -19,35 +19,14 @@ const Counter = ({ count, setCount }) => (
   </Outlined>
 );
 
-const cursorPositionAtom = atom([0, 0]);
-const Mousepad = ({ pos: [x, y], setPos: setCursorPosition }) => {
-  const opacity = 100 * Math.min(x / 200, 1);
-  const red = 255 * Math.min(y / 200, 1);
-  const pStyle = style({
-    position: 'relative',
-    opacity: `${opacity}%`,
-    color: `rgb(${red}, 255, 255)`,
-  });
-
-  return (
-    <div style="width: 100%; height: 100%" mousemove={e => setCursorPosition([e.offsetX, e.offsetY])}>
-      <p style={pStyle}>Cursor pos is { x } { y }</p>
-    </div>
-  );
-};
-// cursorPositionAtom.addTrigger((pos, setPos) => apply(mousepadEl, <Mousepad pos={pos} setPos={setPos} />));
-// cursorPositionAtom.set([0, 0]);
 
 counterAtom.addTrigger((count, setCount) => apply(mainEl, <Counter count={count} setCount={setCount} />));
 
-/**
-   An example of a custom component being rendered within a component.
-*/
 const ManyDots = ({ count, setCount }) => (
   <p style={style({
        color: count > 15 ? 'red'
          : count > 10 ? 'orange'
-         : count > 5 ? 'yellow'
+         : count > 5  ? 'yellow'
          : 'white'
      })}>
     { new Array(count).fill('.') }
@@ -59,7 +38,23 @@ const CounterEditor = ({ count, setCount }) => (
   <input input={(e) => setCount(Number(e.target.value))} value={count} />
 );
 
-counterAtom.addTrigger((count, setCount) => apply(counterEditorEl, <CounterEditor count={count} setCount={setCount} />));
+const dep = (deps, func) => {
+  const runFunc = () => func(deps);
+  Object.values(deps).forEach(dep => dep.addTrigger(runFunc));
+  runFunc();
+};
+
+dep(
+  { count: counterAtom },
+  ({ count }) => {
+    const setCount = (newCount) => {
+      if (!isNaN(newCount)) {
+        count.set(newCount);
+      }
+    }
+
+    apply(counterEditorEl, <CounterEditor count={count.value} setCount={setCount} />);
+  });
 
 counterAtom.set(0);
 
@@ -91,8 +86,12 @@ const myThings = [
   }
 ];
 
+for (var i = 0; i < 1000; i++) {
+  myThings.push({ name: `Player_${i}`, age: i });
+}
+
 const TableSearch = ({ search, setSearch, items }) => {
-  const results = items.filter(thing => thing.name.includes(search)
+  const results = items.filter(thing => thing.name.toLowerCase().includes(search.toLowerCase())
                                || thing.age.toString().includes(search));
 
   return (
@@ -125,4 +124,28 @@ searchTerm.addTrigger((search, setSearch) =>
 
 searchTerm.set('');
 
-searchTerm.addTrigger(() => apply(document.getElementById('svg-dupe'), elementToHiccup(document.querySelector('#searcher'))));
+const PackageJsonFetcher = ({ isFetching, result, onClickFetch }) => (
+  <div>
+    { isFetching ? 'fetching...' : null }
+    { result ? `got ${result}` : null }
+    <button click={onClickFetch}>Click to get the author of this package</button>
+  </div>
+);
+
+dep(
+  { isFetching: atom(false),
+    result: atom(null) },
+  ({ isFetching, result }) => {
+    const doFetch = async () => {
+      isFetching.set(true);
+      const fetchResult = await fetch('package.json');
+      const jsonResult = await fetchResult.json();
+      isFetching.set(false);
+      result.set(jsonResult.author);
+    }
+
+    apply(document.getElementById('package-json-fetcher'), <PackageJsonFetcher
+                                                             isFetching={isFetching.value}
+                                                             result={result.value}
+                                                             onClickFetch={doFetch} />);
+  });
