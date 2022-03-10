@@ -72,6 +72,10 @@ const attrsToHiccup = (attrs) => {
  * Given some HTML element, recursively determine its hic representation.
  */
 export const elementToHiccup = (el) => {
+  if (el._hic) {
+    return el._hic;
+  }
+
   if (el.nodeType !== 1) {
     return el.nodeValue;
   }

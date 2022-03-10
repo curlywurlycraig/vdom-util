@@ -1,4 +1,4 @@
-import { style, atom, hic, apply, replace } from "./utils.js";
+import { style, atom, hic, apply, replace, elementToHiccup } from "./utils.js";
 
 const mainEl = document.getElementById("main");
 const mousepadEl = document.getElementById("mousepad");
@@ -91,13 +91,13 @@ const myThings = [
   }
 ];
 
-const TableSearch = ({ search, setSearch }) => {
-  const results = myThings.filter(thing => thing.name.includes(search)
-                                  || thing.age.toString().includes(search));
-  console.log('results are ', results);
+const TableSearch = ({ search, setSearch, items }) => {
+  const results = items.filter(thing => thing.name.includes(search)
+                               || thing.age.toString().includes(search));
+
   return (
     <div>
-      <input input={(e) => setSearch(e.target.value)} value={search} />
+      <input placeholder="Search table" input={(e) => setSearch(e.target.value)} value={search} />
       <table style={style({ margin: '10px' })}>
         <thead>
           <tr>
@@ -121,6 +121,8 @@ const TableSearch = ({ search, setSearch }) => {
 const searchTerm = atom('');
 searchTerm.addTrigger((search, setSearch) =>
   apply(document.getElementById('searcher'),
-        <TableSearch search={search} setSearch={setSearch} />));
+        <TableSearch search={search} setSearch={setSearch} items={myThings} />));
 
 searchTerm.set('');
+
+searchTerm.addTrigger(() => apply(document.getElementById('svg-dupe'), elementToHiccup(document.querySelector('#searcher'))));
