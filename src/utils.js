@@ -42,13 +42,16 @@ const updateAttrs = (el, attrs) => {
   return el;
 }
 
-export const hiccupToElement = ([tag, ...rest]) => {
+/**
+ * Given some hiccup, create an HTML element.
+ */
+export const hiccupToElement = ([tag, ...rest], ns='http://www.w3.org/1999/xhtml') => {
   const hasAttrs = !Array.isArray(rest[0]) && typeof rest[0] === 'object';
   const hic = hasAttrs
         ? [tag, rest[0], ...rest.slice(1)]
         : [tag, {}, ...rest];
 
-  const result = hiccupToElementWithAttrs(...hic);
+  const result = hiccupToElementWithAttrs(hic, ns);
   // The hic representation is stored on the HTML Element to make it easier to perform diffs.
   // This is basically like a virtual dom but stored on the real dom for convenience.
   result._hic = hic;
@@ -92,8 +95,12 @@ export const elementToHiccup = (el) => {
   return [tagName.toLowerCase(), attrsToHiccup(attrs), ...childrenHiccup];
 };
 
-const hiccupToElementWithAttrs = (tag, attrs, ...children) => {
-  const parsed = updateAttrs(document.createElement(tag), attrs)
+const hiccupToElementWithAttrs = ([tag, attrs, ...children], ns='http://www.w3.org/1999/xhtml') => {
+  // Namespace must apply to all children too. If a namespace is set on an attribute, it should apply to all children.
+  const possiblyOverriddenNs = attrs.xmlns || ns;
+  const newEl = document.createElementNS(possiblyOverriddenNs, tag);
+  const parsed = updateAttrs(newEl, attrs)
+
   const resolveChildren = val => {
     return val
       .map(x => {
@@ -108,7 +115,7 @@ const hiccupToElementWithAttrs = (tag, attrs, ...children) => {
           return x;
         }
         
-        return hiccupToElement(x)
+        return hiccupToElement(x, possiblyOverriddenNs)
       })
   } 
 
