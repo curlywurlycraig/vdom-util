@@ -96,6 +96,11 @@ export const elementToHiccup = (el) => {
 };
 
 const hiccupToElementWithAttrs = ([tag, attrs, ...children], ns='http://www.w3.org/1999/xhtml') => {
+  if (tag === 'svg' && !attrs.xmlns) {
+    console.warn('Using an SVG without a namespace will result in the SVG not displaying correctly.',
+                 'Try adding "xmlns=\"http://www.w3.org/2000/svg\" to the <svg> element.');
+  }
+
   // Namespace must apply to all children too. If a namespace is set on an attribute, it should apply to all children.
   const possiblyOverriddenNs = attrs.xmlns || ns;
   const newEl = document.createElementNS(possiblyOverriddenNs, tag);
