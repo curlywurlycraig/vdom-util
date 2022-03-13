@@ -45,7 +45,7 @@ const updateAttrs = (el, attrs) => {
 /**
  * Given some hiccup, create an HTML element.
  */
-export const hiccupToElement = ([tag, ...rest], ns='http://www.w3.org/1999/xhtml') => {
+const hiccupToElement = ([tag, ...rest], ns='http://www.w3.org/1999/xhtml') => {
   const hasAttrs = !Array.isArray(rest[0]) && typeof rest[0] === 'object';
   const hic = hasAttrs
         ? [tag, rest[0], ...rest.slice(1)]
@@ -74,7 +74,7 @@ const attrsToHiccup = (attrs) => {
 /**
  * Given some HTML element, recursively determine its hic representation.
  */
-export const elementToHiccup = (el) => {
+const elementToHiccup = (el) => {
   if (el._hic) {
     return el._hic;
   }
@@ -163,19 +163,6 @@ const reset = (el, hic) => {
 };
 
 /**
-   Render the hic and apply it to the element.
-*/
-export const apply = (hostEl, hic) => {
-  const renderedChild = hostEl.children[0];
-  if (!renderedChild || renderedChild._hic === undefined) {
-    // First run, easy.
-    return reset(hostEl, hic);
-  }
-
-  return update(renderedChild, render(hic));
-}
-
-/**
    Given some HTML element, update that element and its children with the hiccup.
    This preserves existing HTML elements without removing and creating new ones.
 */
@@ -219,43 +206,34 @@ const update = (el, hic) => {
  * The render function is passed the contents of what is being replaced as hic.
  */
 export const replace = (el, renderFunc) => {
-  const previousHic = elementToHiccup(el);
+  previousHic = el._hic ? el._hic : elementToHiccup(el);
+  el._hic = previousHic;
   const renderedHic = render(renderFunc({ children: previousHic }));
-  reset(el, renderedHic);
+  update(el, renderedHic);
 }
 
-//
-// Utils
-//
-
 /**
-   A light subscribable wrapper around state.
-   
-   This is a bit of a swiss army knife. You can use the same data to render multiple components in different parts of the app quite easily, or you can use this as a simple state holder for a single component.
-   
-   It enables redux-style subscriptions, or the useState react paradigm (implemented as HOC).
+   Render the hic and insert it into the element.
 */
-export const atom = (initialValue) => {
-  const result = {
-    triggers: [],
-    value: initialValue,
-    addTrigger: (trigger) => {
-      result.triggers.push(trigger);
-    },
-    set: (val) => {
-      result.value = val;
-      result.triggers.forEach(trig => trig(val, result.set, result));
-    }
+export const insert = (hostEl, hic) => {
+  const renderedChild = hostEl.children[0];
+  if (!renderedChild || renderedChild._hic === undefined) {
+    return reset(hostEl, hic);
   }
 
-  return result;
-};
+  return update(renderedChild, render(hic));
+}
 
 /**
-   Makes a style string from an object
-*/
-export const style = (obj) =>
-      Object.entries(obj).reduce((acc, [k, v]) => `${acc}; ${k}: ${v}; `, '')
+   Simply render and append some hic
+ */
+export const append = (el, hic) => {
+  const newEl = hiccupToElement(render(hic));
+  el.append(newEl);
+  return newEl;
+}
+
+export const make = (hic) => hiccupToElement(render(hic));
 
 /**
    Conform to the jsx factory signature to produce hiccup.
@@ -263,7 +241,13 @@ export const style = (obj) =>
 export const hic = (name, options, ...children) => {
   // Children could be a single argument that is an array of elements.
   // This happens in the case that children is an attr of a custom Component.
-  const isChildArray = children.length === 1 && Array.isArray(children[0]) && !isHic(children[0])
-  const actualChildren = isChildArray ? children[0] : children;
-  return [name, options || {}, ...actualChildren];
+  const flattenedChildren = children.reduce((acc, curr) => {
+    if (!isHic(curr) && Array.isArray(curr)) {
+      return [...acc, ...curr];
+    }
+
+    return [...acc, curr];
+  }, []);
+  
+  return [name, options || {}, ...flattenedChildren];
 }

@@ -4,6 +4,8 @@ https://developer.mozilla.org/en-US/docs/Web/API/Node/
 
 # TODO
 
+- [ ] Don't render null children
+When should the nulls be stripped?
 - [ ] Find a way to get rid of the logic that hiccupToElement needs
 Basically refactor `hiccupToElement` and `apply` so that there's less duplication
 - [ ] Write tests
@@ -16,6 +18,7 @@ Would be nice to have some debugger that lets you fiddle with the atom state and
 - [ ] Think of ways to make this like a 21st century jquery
 That is, find, apply, and also once things are rendered, how to get refs?
 - [ ] Given some hiccup, make it possible to query the hiccup.
+- [ ] Fragments. Should be able to do `insert` with a list
 
 So that I could do:
 

@@ -1,1 +1,269 @@
-(()=>{var h=t=>Array.isArray(t)&&t.length>1&&typeof t[1]=="object"&&!Array.isArray(t[1]),A=(t,e)=>{let[,r]=t._hic||[];return Object.entries(e).forEach(([s,n])=>{r&&typeof r[s]=="function"&&t.removeEventListener(s,r[s]),typeof n=="function"?t.addEventListener(s.toLowerCase(),n):(s==="value"&&(t.value=n),t.setAttribute(s,n))}),t},v=([t,...e],r="http://www.w3.org/1999/xhtml")=>{let n=!Array.isArray(e[0])&&typeof e[0]=="object"?[t,e[0],...e.slice(1)]:[t,{},...e],u=L(n,r);return u._hic=n,u},I=t=>{let e={};for(var r=0;r<t.length;r++){let s=t[r];e[s.name]=s.value}return e},C=t=>{if(t._hic)return t._hic;if(t.nodeType!==1)return t.nodeValue;let e=t.tagName,r=t.attributes,s=t.childNodes,n=[];for(var u=0;u<s.length;u++)n.push(C(s[u]));return[e.toLowerCase(),I(r),...n]},L=([t,e,...r],s="http://www.w3.org/1999/xhtml")=>{t==="svg"&&!e.xmlns&&console.warn("Using an SVG without a namespace will result in the SVG not displaying correctly.",'Try adding "xmlns="http://www.w3.org/2000/svg" to the <svg> element.');let n=e.xmlns||s,u=document.createElementNS(n,t),y=A(u,e);return(l=>l.map(a=>Array.isArray(a)&&a.length===0?"":a).map(a=>typeof a=="string"||typeof a=="number"||!a?a:v(a,n)))(r).reduce((l,a)=>(l.append(a),l),y)},i=([t,e,...r])=>{if(typeof t=="function")return i(t({...e,children:r}));let s=r.map(n=>Array.isArray(n)&&n.length?i(n):n);return[t,e,...s]},b=(t,e)=>(t.innerHTML="",t.appendChild(v(i(e))),t),c=(t,e)=>{let r=t.children[0];return!r||r._hic===void 0?b(t,e):E(r,i(e))},E=(t,e)=>{let[r,s,...n]=e,u=t._hic,[y,_,...l]=u;if(y!==r)return b(t.parentNode,e);for(A(t,s),n.forEach((a,f)=>{if(!t.childNodes[f]){let B=h(a)?v(a):document.createTextNode(a);t.appendChild(B);return}if(h(a)){E(t.childNodes[f],a);return}t.childNodes[f].nodeValue=a});t.childNodes.length>n.length;)t.childNodes[n.length].remove();return t._hic=e,t},T=(t,e)=>{let r=C(t),s=i(e({children:r}));b(t,s)},d=t=>{let e={triggers:[],value:t,addTrigger:r=>{e.triggers.push(r)},set:r=>{e.value=r,e.triggers.forEach(s=>s(r,e.set,e))}};return e},g=t=>Object.entries(t).reduce((e,[r,s])=>`${e}; ${r}: ${s}; `,""),o=(t,e,...r)=>{let n=r.length===1&&Array.isArray(r[0])&&!h(r[0])?r[0]:r;return[t,e||{},...n]};var N=document.getElementById("main"),S=document.getElementById("mousepad"),J=document.getElementById("extra"),O=document.getElementById("editor"),k=({children:t})=>o("div",{style:g({border:"1px solid #445",padding:"10px"})},t),w=d(0),$=({count:t,setCount:e})=>o(k,null,o("p",null,"count is ",t),o("button",{click:()=>e(t+1)},"increment"));w.addTrigger((t,e)=>c(N,o($,{count:t,setCount:e})));var F=({count:t,setCount:e})=>o("p",{style:g({color:t>15?"red":t>10?"orange":t>5?"yellow":"white"})},new Array(t).fill(".")),M=({count:t,setCount:e})=>o("input",{input:r=>e(Number(r.target.value)),value:t}),x=(t,e)=>{let r=()=>e(t);Object.values(t).forEach(s=>s.addTrigger(r)),r()};x({count:w},({count:t})=>{let e=r=>{isNaN(r)||t.set(r)};c(O,o(M,{count:t.value,setCount:e}))});w.set(0);var m=d(0);m.addTrigger(t=>c(N,o(F,{count:t})));c(S,o("div",null,o("button",{click:()=>m.set(m.value+1)},"+"),o("button",{click:()=>m.set(Math.max(0,m.value-1))},"-")));T(document.getElementById("ellipse"),({children:t})=>o("p",null,"This used to be: ",t));var j=[{name:"Craig",age:28},{name:"Meg",age:30},{name:"Geordi",age:.4}];for(p=0;p<1e3;p++)j.push({name:`Player_${p}`,age:p});var p,V=({search:t,setSearch:e,items:r})=>{let s=r.filter(n=>n.name.toLowerCase().includes(t.toLowerCase())||n.age.toString().includes(t));return o("div",null,o("input",{placeholder:"Search table",input:n=>e(n.target.value),value:t}),o("table",{style:g({margin:"10px"})},o("thead",null,o("tr",null,o("th",null,"Name"),o("th",null,"Age"),o("th",null,"An input"))),o("tbody",null,s.map(n=>o("tr",null,o("td",null,n.name),o("td",null,n.age),o("td",null,o("input",null)))))))},H=d("");H.addTrigger((t,e)=>c(document.getElementById("searcher"),o(V,{search:t,setSearch:e,items:j})));H.set("");var G=({isFetching:t,result:e,onClickFetch:r})=>o("div",null,t?"fetching...":null,e?`got ${e}`:null,o("button",{click:r},"Click to get the author of this package"));x({isFetching:d(!1),result:d(null)},({isFetching:t,result:e})=>{let r=async()=>{t.set(!0);let n=await(await fetch("package.json")).json();t.set(!1),e.set(n.author)};c(document.getElementById("package-json-fetcher"),o(G,{isFetching:t.value,result:e.value,onClickFetch:r}))});})();
+(() => {
+  // src/utils/vdom.js
+  var isHic = (thing) => Array.isArray(thing) && thing.length > 1 && typeof thing[1] === "object" && !Array.isArray(thing[1]);
+  var updateAttrs = (el, attrs) => {
+    const [, prevAttrs] = el._hic || [];
+    Object.entries(attrs).forEach(([k, v]) => {
+      if (prevAttrs && typeof prevAttrs[k] === "function") {
+        el.removeEventListener(k, prevAttrs[k]);
+      }
+      if (typeof v === "function") {
+        el.addEventListener(k.toLowerCase(), v);
+      } else {
+        if (k === "value") {
+          el.value = v;
+        }
+        el.setAttribute(k, v);
+      }
+    });
+    return el;
+  };
+  var hiccupToElement = ([tag, ...rest], ns = "http://www.w3.org/1999/xhtml") => {
+    const hasAttrs = !Array.isArray(rest[0]) && typeof rest[0] === "object";
+    const hic2 = hasAttrs ? [tag, rest[0], ...rest.slice(1)] : [tag, {}, ...rest];
+    const result = hiccupToElementWithAttrs(hic2, ns);
+    result._hic = hic2;
+    return result;
+  };
+  var attrsToHiccup = (attrs) => {
+    const result = {};
+    for (var i = 0; i < attrs.length; i++) {
+      const attr = attrs[i];
+      result[attr.name] = attr.value;
+    }
+    return result;
+  };
+  var elementToHiccup = (el) => {
+    if (el._hic) {
+      return el._hic;
+    }
+    if (el.nodeType !== 1) {
+      return el.nodeValue;
+    }
+    const tagName = el.tagName;
+    const attrs = el.attributes;
+    const children = el.childNodes;
+    const childrenHiccup = [];
+    for (var i = 0; i < children.length; i++) {
+      childrenHiccup.push(elementToHiccup(children[i]));
+    }
+    return [tagName.toLowerCase(), attrsToHiccup(attrs), ...childrenHiccup];
+  };
+  var hiccupToElementWithAttrs = ([tag, attrs, ...children], ns = "http://www.w3.org/1999/xhtml") => {
+    if (tag === "svg" && !attrs.xmlns) {
+      console.warn("Using an SVG without a namespace will result in the SVG not displaying correctly.", 'Try adding "xmlns="http://www.w3.org/2000/svg" to the <svg> element.');
+    }
+    const possiblyOverriddenNs = attrs.xmlns || ns;
+    const newEl = document.createElementNS(possiblyOverriddenNs, tag);
+    const parsed = updateAttrs(newEl, attrs);
+    const resolveChildren = (val) => {
+      return val.map((x) => {
+        if (Array.isArray(x) && x.length === 0) {
+          return "";
+        }
+        return x;
+      }).map((x) => {
+        if (typeof x === "string" || typeof x === "number" || !x) {
+          return x;
+        }
+        return hiccupToElement(x, possiblyOverriddenNs);
+      });
+    };
+    return resolveChildren(children).reduce((ac, x) => {
+      ac.append(x);
+      return ac;
+    }, parsed);
+  };
+  var render = ([tag, attrs, ...children]) => {
+    if (typeof tag === "function") {
+      return render(tag({ ...attrs, children }));
+    }
+    const renderedChildren = children.map((child) => {
+      if (Array.isArray(child) && child.length) {
+        return render(child);
+      }
+      return child;
+    });
+    return [tag, attrs, ...renderedChildren];
+  };
+  var reset = (el, hic2) => {
+    el.innerHTML = "";
+    el.appendChild(hiccupToElement(render(hic2)));
+    return el;
+  };
+  var update = (el, hic2) => {
+    const [tag, attrs, ...children] = hic2;
+    const prevHic = el._hic;
+    const [prevTag, prevAttrs, ...prevChildren] = prevHic;
+    if (prevTag !== tag) {
+      return reset(el.parentNode, hic2);
+    }
+    updateAttrs(el, attrs);
+    children.forEach((child, idx) => {
+      if (!el.childNodes[idx]) {
+        const newEl = isHic(child) ? hiccupToElement(child) : document.createTextNode(child);
+        el.appendChild(newEl);
+        return;
+      }
+      if (isHic(child)) {
+        update(el.childNodes[idx], child);
+        return;
+      }
+      el.childNodes[idx].nodeValue = child;
+    });
+    while (el.childNodes.length > children.length) {
+      el.childNodes[children.length].remove();
+    }
+    el._hic = hic2;
+    return el;
+  };
+  var replace = (el, renderFunc) => {
+    previousHic = el._hic ? el._hic : elementToHiccup(el);
+    el._hic = previousHic;
+    const renderedHic = render(renderFunc({ children: previousHic }));
+    update(el, renderedHic);
+  };
+  var insert = (hostEl, hic2) => {
+    const renderedChild = hostEl.children[0];
+    if (!renderedChild || renderedChild._hic === void 0) {
+      return reset(hostEl, hic2);
+    }
+    return update(renderedChild, render(hic2));
+  };
+  var hic = (name, options, ...children) => {
+    const flattenedChildren = children.reduce((acc, curr) => {
+      if (!isHic(curr) && Array.isArray(curr)) {
+        return [...acc, ...curr];
+      }
+      return [...acc, curr];
+    }, []);
+    return [name, options || {}, ...flattenedChildren];
+  };
+
+  // src/utils/style.js
+  var style = (obj) => Object.entries(obj).reduce((acc, [k, v]) => `${acc}; ${k}: ${v}; `, "");
+
+  // src/utils/atom.js
+  var atom = (initialValue) => {
+    const result = {
+      triggers: [],
+      value: initialValue,
+      addTrigger: (trigger) => {
+        result.triggers.push(trigger);
+      },
+      set: (val) => {
+        result.value = val;
+        result.triggers.forEach((trig) => trig(val, result.set, result));
+      }
+    };
+    return result;
+  };
+  var dep = (deps, func) => {
+    const runFunc = () => func(deps);
+    Object.values(deps).forEach((dep2) => dep2.addTrigger(runFunc));
+    runFunc();
+  };
+
+  // src/demo.jsx
+  var mainEl = document.getElementById("main");
+  var mousepadEl = document.getElementById("mousepad");
+  var extraEl = document.getElementById("extra");
+  var counterEditorEl = document.getElementById("editor");
+  var Outlined = ({ children }) => /* @__PURE__ */ hic("div", {
+    style: style({ border: "1px solid #445", padding: "10px" })
+  }, children);
+  var counterAtom = atom(0);
+  var Counter = ({ count, setCount }) => /* @__PURE__ */ hic(Outlined, null, /* @__PURE__ */ hic("p", null, "count is ", count), /* @__PURE__ */ hic("button", {
+    click: () => setCount(count + 1)
+  }, "increment"));
+  counterAtom.addTrigger((count, setCount) => insert(mainEl, /* @__PURE__ */ hic(Counter, {
+    count,
+    setCount
+  })));
+  var ManyDots = ({ count, setCount }) => /* @__PURE__ */ hic("p", {
+    style: style({
+      color: count > 15 ? "red" : count > 10 ? "orange" : count > 5 ? "yellow" : "white"
+    })
+  }, new Array(count).fill("."));
+  var CounterEditor = ({ count, setCount }) => /* @__PURE__ */ hic("input", {
+    input: (e) => setCount(Number(e.target.value)),
+    value: count
+  });
+  dep({ count: counterAtom }, ({ count }) => {
+    const setCount = (newCount) => {
+      if (!isNaN(newCount)) {
+        count.set(newCount);
+      }
+    };
+    insert(counterEditorEl, /* @__PURE__ */ hic(CounterEditor, {
+      count: count.value,
+      setCount
+    }));
+  });
+  counterAtom.set(0);
+  var otherCounterAtom = atom(0);
+  otherCounterAtom.addTrigger((value) => insert(mainEl, /* @__PURE__ */ hic(ManyDots, {
+    count: value
+  })));
+  insert(mousepadEl, /* @__PURE__ */ hic("div", null, /* @__PURE__ */ hic("button", {
+    click: () => otherCounterAtom.set(otherCounterAtom.value + 1)
+  }, "+"), /* @__PURE__ */ hic("button", {
+    click: () => otherCounterAtom.set(Math.max(0, otherCounterAtom.value - 1))
+  }, "-")));
+  replace(document.getElementById("ellipse"), ({ children }) => /* @__PURE__ */ hic("p", null, "This used to be: ", children));
+  var myThings = [
+    {
+      name: "Craig",
+      age: 28
+    },
+    {
+      name: "Meg",
+      age: 30
+    },
+    {
+      name: "Geordi",
+      age: 0.4
+    }
+  ];
+  for (i = 0; i < 1e3; i++) {
+    myThings.push({ name: `Player_${i}`, age: i });
+  }
+  var i;
+  var TableSearch = ({ search, setSearch, items }) => {
+    const results = items.filter((thing) => thing.name.toLowerCase().includes(search.toLowerCase()) || thing.age.toString().includes(search));
+    return /* @__PURE__ */ hic("div", null, /* @__PURE__ */ hic("input", {
+      placeholder: "Search table",
+      input: (e) => setSearch(e.target.value),
+      value: search
+    }), /* @__PURE__ */ hic("table", {
+      style: style({ margin: "10px" })
+    }, /* @__PURE__ */ hic("thead", null, /* @__PURE__ */ hic("tr", null, /* @__PURE__ */ hic("th", null, "Name"), /* @__PURE__ */ hic("th", null, "Age"), /* @__PURE__ */ hic("th", null, "An input"))), /* @__PURE__ */ hic("tbody", null, results.map((result) => /* @__PURE__ */ hic("tr", null, /* @__PURE__ */ hic("td", null, result.name), /* @__PURE__ */ hic("td", null, result.age), /* @__PURE__ */ hic("td", null, /* @__PURE__ */ hic("input", null)))))));
+  };
+  var searchTerm = atom("");
+  searchTerm.addTrigger((search, setSearch) => insert(document.getElementById("searcher"), /* @__PURE__ */ hic(TableSearch, {
+    search,
+    setSearch,
+    items: myThings
+  })));
+  searchTerm.set("");
+  var PackageJsonFetcher = ({ isFetching, result, onClickFetch }) => /* @__PURE__ */ hic("div", null, isFetching ? "fetching..." : null, result ? `got ${result}` : null, /* @__PURE__ */ hic("button", {
+    click: onClickFetch
+  }, "Click to get the author of this package"));
+  dep({
+    isFetching: atom(false),
+    result: atom(null)
+  }, ({ isFetching, result }) => {
+    const doFetch = async () => {
+      isFetching.set(true);
+      const fetchResult = await fetch("package.json");
+      const jsonResult = await fetchResult.json();
+      isFetching.set(false);
+      result.set(jsonResult.author);
+    };
+    insert(document.getElementById("package-json-fetcher"), /* @__PURE__ */ hic(PackageJsonFetcher, {
+      isFetching: isFetching.value,
+      result: result.value,
+      onClickFetch: doFetch
+    }));
+  });
+})();

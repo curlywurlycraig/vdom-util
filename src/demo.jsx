@@ -1,4 +1,6 @@
-import { style, atom, hic, apply, replace, elementToHiccup } from "./utils.js";
+import { hic, insert, replace } from "./utils/vdom.js";
+import { style } from "./utils/style.js";
+import { atom, dep } from "./utils/atom.js";
 
 const mainEl = document.getElementById("main");
 const mousepadEl = document.getElementById("mousepad");
@@ -20,7 +22,7 @@ const Counter = ({ count, setCount }) => (
 );
 
 
-counterAtom.addTrigger((count, setCount) => apply(mainEl, <Counter count={count} setCount={setCount} />));
+counterAtom.addTrigger((count, setCount) => insert(mainEl, <Counter count={count} setCount={setCount} />));
 
 const ManyDots = ({ count, setCount }) => (
   <p style={style({
@@ -38,12 +40,6 @@ const CounterEditor = ({ count, setCount }) => (
   <input input={(e) => setCount(Number(e.target.value))} value={count} />
 );
 
-const dep = (deps, func) => {
-  const runFunc = () => func(deps);
-  Object.values(deps).forEach(dep => dep.addTrigger(runFunc));
-  runFunc();
-};
-
 dep(
   { count: counterAtom },
   ({ count }) => {
@@ -53,15 +49,15 @@ dep(
       }
     }
 
-    apply(counterEditorEl, <CounterEditor count={count.value} setCount={setCount} />);
+    insert(counterEditorEl, <CounterEditor count={count.value} setCount={setCount} />);
   });
 
 counterAtom.set(0);
 
 const otherCounterAtom = atom(0);
-otherCounterAtom.addTrigger((value) => apply(mainEl, <ManyDots count={value} />));
+otherCounterAtom.addTrigger((value) => insert(mainEl, <ManyDots count={value} />));
 
-apply(
+insert(
   mousepadEl,
   <div>
     <button click={() => otherCounterAtom.set(otherCounterAtom.value + 1)}>+</button>
@@ -119,7 +115,7 @@ const TableSearch = ({ search, setSearch, items }) => {
 
 const searchTerm = atom('');
 searchTerm.addTrigger((search, setSearch) =>
-  apply(document.getElementById('searcher'),
+  insert(document.getElementById('searcher'),
         <TableSearch search={search} setSearch={setSearch} items={myThings} />));
 
 searchTerm.set('');
@@ -144,7 +140,7 @@ dep(
       result.set(jsonResult.author);
     }
 
-    apply(document.getElementById('package-json-fetcher'), <PackageJsonFetcher
+    insert(document.getElementById('package-json-fetcher'), <PackageJsonFetcher
                                                              isFetching={isFetching.value}
                                                              result={result.value}
                                                              onClickFetch={doFetch} />);
