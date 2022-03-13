@@ -27,6 +27,11 @@ export const atom = (initialValue) => {
 export const dep = (deps, func) => {
   const runFunc = () => func(deps);
   Object.values(deps).forEach(dep => dep.addTrigger(runFunc));
-  runFunc();
+  runFunc(deps);
 };
 
+export const onAny = (deps, func) => {
+  const runFunc = () => func(deps);
+  deps.forEach(dep => dep.addTrigger(runFunc));
+  runFunc(deps);
+}

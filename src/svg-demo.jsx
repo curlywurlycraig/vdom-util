@@ -1,6 +1,6 @@
 import { hic, insert, append, replace } from "./utils/vdom.js";
 import { style } from "./utils/style.js";
-import { atom, dep } from "./utils/atom.js";
+import { atom, dep, onAny } from "./utils/atom.js";
 
 const Svg = ({ children, ...props }) => (
   <svg
@@ -175,7 +175,7 @@ const myData = [0, 12, 0.9, 3.5];
 const Example6 = ({ data }) => {
   const maxData = Math.max(...data);
   return (
-    <Svg viewBox="0 0 1 1">
+    <Svg width="200" height="200" viewBox="0 0 1 1">
       <defs>
         <pattern id="chart-hatch" viewBox="0 0 1 1" width="0.05" height="0.05" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
           <path d="M0,0.5 L1,0.5" stroke="#aa8a" fill="none" stroke-width="0.05" />
@@ -192,10 +192,10 @@ const Example6 = ({ data }) => {
       { data.map((datum, idx) => (
           <rect
             class="chart-bar"
-            x={idx/data.length + 0.1}
-            y={1.1 - datum/maxData}
+            x={idx/data.length * 0.8 + 0.1}
+            y={0.9 - datum/maxData * 0.8}
             width="0.1"
-            height={datum/maxData - 0.2}
+            height={Math.max(datum/maxData * 0.8, 0)}
             stroke="#aa8"
             stroke-width="0.005"
             fill="url(#chart-hatch)" />
@@ -212,7 +212,7 @@ dep(
     };
 
     const el = (
-      <div>
+      <div style="max-width: 200px">
         <Example6 data={data.value} />
         <button click={randomizeData}>Random data</button>
       </div>
@@ -223,3 +223,26 @@ dep(
       el
     );
   });
+
+
+// Example 7
+
+const Example7 = ({ x }) => {
+  return (
+    <Svg viewBox="0 0 10 1">
+      <circle class="animated-circle" cy="0.5" cx={x} r="0.5" fill="red" />
+    </Svg>
+  );
+}
+
+{
+  const x = atom(0.5);
+
+  window.setInterval(() => {
+    x.set(0.5 + Math.random() * 9);
+  }, 1000);
+
+  onAny([x], () => {
+    insert(document.getElementById('example-7-contents'), <Example7 x={x.value} />);
+  });
+}
