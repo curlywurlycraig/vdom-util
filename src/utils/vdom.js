@@ -177,19 +177,28 @@ const update = (el, hic) => {
 
   updateAttrs(el, attrs);
 
+  var additionalChildren = 0;
   children.forEach((child, idx) => {
-    if (!el.childNodes[idx]) {
+    const currChildNode = el.childNodes[idx + additionalChildren];
+    if (!currChildNode) {
       const newEl = isHic(child) ? hiccupToElement(child) : document.createTextNode(child);
+      if (!isHic(child)) {
+        newEl._hic = child;
+      }
+
       el.appendChild(newEl);
-      return;
+      additionalChildren += 1;
+    } else if (isHic(child)) {
+      update(currChildNode, child);
+    } else if (currChildNode.nodeType === 1) {
+      // A HTML element used to be here, but now it needs to be a text node.
+      // Replace it
+      const newNode = document.createTextNode(child);
+      newNode._hic = child;
+      currChildNode.parentNode.replaceChild(newNode, currChildNode);
+    } else {
+      currChildNode.nodeValue = child;
     }
-
-    if (isHic(child)) {
-      update(el.childNodes[idx], child);
-      return;
-    }
-
-    el.childNodes[idx].nodeValue = child;
   });
 
   // Delete remaining children
