@@ -246,6 +246,10 @@ export const hic = (name, options, ...children) => {
       return [...acc, ...curr];
     }
 
+    if (curr === null || curr === undefined) {
+      return acc;
+    }
+
     return [...acc, curr];
   }, []);
   
