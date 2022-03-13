@@ -4,7 +4,6 @@ https://developer.mozilla.org/en-US/docs/Web/API/Node/
 
 # TODO
 
-- [ ] Fix weird glitch when clicking the "fetch pacakge author" button on the demo
 - [ ] Find a way to get rid of the logic that hiccupToElement needs
 Basically refactor `hiccupToElement` and `apply` so that there's less duplication
 - [ ] Write tests

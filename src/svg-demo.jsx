@@ -77,7 +77,7 @@ insert(
 const Example3 = () => (
   <Svg viewBox="0 0 1 1" width="200" height="200">
     <defs>
-      <pattern id="diamond" viewBox="0 0 10 10" width="0.05em" height="0.05em">
+      <pattern id="diamond" viewBox="0 0 10 10" width="0.05" height="0.05" patternUnits="userSpaceOnUse">
         <polygon points="5,1 9,5 5,9 1,5" fill="#88aa" />
       </pattern>
     </defs>
@@ -140,6 +140,7 @@ const Example5 = () => (
     </defs>
 
     <circle
+      tabindex="1"
       id="hoverable-circle"
       cx="0.5"
       cy="0.5"
@@ -150,6 +151,7 @@ const Example5 = () => (
       mouseover={() => console.log('hovered circle')} />
 
     <circle
+      tabindex="2"
       id="other-hoverable-circle"
       cx="1"
       cy="0.6"
@@ -175,20 +177,28 @@ const Example6 = ({ data }) => {
   return (
     <Svg viewBox="0 0 1 1">
       <defs>
-        <pattern id="hatchy" viewBox="0 0 1 1" width="10%" height="10%">
-          <path d="M0,1 L1,0 M-0.5,0.5 L0.5,-0.5 M0.5,1.5 L1.5,0.5" stroke="#88a" fill="none" stroke-width="0.8" />
+        <pattern id="chart-hatch" viewBox="0 0 1 1" width="0.05" height="0.05" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <path d="M0,0.5 L1,0.5" stroke="#aa8a" fill="none" stroke-width="0.05" />
         </pattern>
+
+        <marker id="arrow" viewBox="0 0 1 1" markerWidth="0.03" markerHeight="0.03" orient="auto" refX="0.5" refY="0.5" markerUnits="userSpaceOnUse">
+          <path d="M0,0 L1,0.5 L0,1 z" fill="#ffa" />
+        </marker>
       </defs>
+
+      <line x1="0.04" y1="0.96" x2="0.04" y2="0.04" marker-end="url(#arrow)" stroke="#ffa" stroke-width="0.005" />
+      <line x1="0.04" y1="0.96" x2="0.96" y2="0.96" marker-end="url(#arrow)" stroke="#ffa" stroke-width="0.005" />
 
       { data.map((datum, idx) => (
           <rect
-            x={idx/data.length}
-            y={1 - datum/maxData}
+            class="chart-bar"
+            x={idx/data.length + 0.1}
+            y={1.1 - datum/maxData}
             width="0.1"
-            height={datum/maxData}
+            height={datum/maxData - 0.2}
             stroke="#aa8"
-            stroke-width="0.001"
-            fill="url(#hatchy)" />
+            stroke-width="0.005"
+            fill="url(#chart-hatch)" />
       )) }
     </Svg>
   );
@@ -200,7 +210,7 @@ dep(
     const randomizeData = () => {
       data.set(new Array(4).fill(null).map(() => Math.random() * 15));
     };
-    
+
     const el = (
       <div>
         <Example6 data={data.value} />
