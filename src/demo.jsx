@@ -1,4 +1,4 @@
-import { hic, insert, replace } from "./utils/vdom.js";
+import { hic, insert, replace, append } from "./utils/vdom.js";
 import { style } from "./utils/style.js";
 import { atom, dep } from "./utils/atom.js";
 
@@ -118,7 +118,7 @@ searchTerm.addTrigger((search, setSearch) =>
   insert(document.getElementById('searcher'),
         <TableSearch search={search} setSearch={setSearch} items={myThings} />));
 
-searchTerm.set('');
+searchTerm.set('Cra');
 
 const PackageJsonFetcher = ({ isFetching, result, onClickFetch }) => (
   <div>
@@ -145,3 +145,34 @@ dep(
                                                              result={result.value}
                                                              onClickFetch={doFetch} />);
   });
+
+
+// Demo of a with wrapper
+const withCountRenders = (Child) => {
+  const renderCount = atom(0);
+
+  return () => {
+    renderCount.set(renderCount.value + 1);
+    return <Child renderCount={renderCount.value} />;
+  };
+};
+
+const ShowRenders = withCountRenders(({ renderCount }) => <p>This component has rendered { renderCount } times.</p>);
+
+const newEl = append(document.querySelector('main'), <ShowRenders />);
+append(document.querySelector('main'), <ShowRenders />);
+append(document.querySelector('main'), <ShowRenders />);
+
+replace(document.getElementById('fruit'),
+        ({ children }) => {
+          const vals = children
+                .childWithTag("tbody")
+                .childrenWithTag("tr")
+                .map(row => row.nthChild(1).nthChild(0))
+                .map(Number);
+                     
+          const total = vals.reduce((acc, curr) => acc + curr, 0);
+          children.childWithTag("tbody")
+            .push(<tr><td><b>Total</b></td><td>{ total }</td></tr>);
+          return children;
+        });

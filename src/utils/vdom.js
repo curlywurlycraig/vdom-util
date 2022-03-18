@@ -1,3 +1,5 @@
+import { Hic } from './hic.js';
+
 /**
  * Sort of hacky way to determine if some argument is a hic representation.
  */
@@ -92,7 +94,7 @@ const elementToHiccup = (el) => {
     childrenHiccup.push(elementToHiccup(children[i]));
   }
 
-  return [tagName.toLowerCase(), attrsToHiccup(attrs), ...childrenHiccup];
+  return new Hic(tagName.toLowerCase(), attrsToHiccup(attrs), ...childrenHiccup);
 };
 
 const hiccupToElementWithAttrs = ([tag, attrs, ...children], ns='http://www.w3.org/1999/xhtml') => {
@@ -215,10 +217,10 @@ const update = (el, hic) => {
  * The render function is passed the contents of what is being replaced as hic.
  */
 export const replace = (el, renderFunc) => {
-  previousHic = el._hic ? el._hic : elementToHiccup(el);
+  const previousHic = el._hic ? el._hic : elementToHiccup(el);
   el._hic = previousHic;
   const renderedHic = render(renderFunc({ children: previousHic }));
-  update(el, renderedHic);
+  el.parentNode.replaceChild(hiccupToElement(renderedHic), el);
 }
 
 /**
@@ -237,8 +239,7 @@ export const insert = (hostEl, hic) => {
    Simply render and append some hic
  */
 export const append = (el, hic) => {
-  const newEl = hiccupToElement(render(hic));
-  el.append(newEl);
+  const newEl = make(hic);
   return newEl;
 }
 
@@ -262,5 +263,5 @@ export const hic = (name, options, ...children) => {
     return [...acc, curr];
   }, []);
   
-  return [name, options || {}, ...flattenedChildren];
+  return new Hic(name, options || {}, ...flattenedChildren);
 }

@@ -4,6 +4,7 @@ https://developer.mozilla.org/en-US/docs/Web/API/Node/
 
 # TODO
 
+- [ ] Find a way to flatten children outside of `hic` so that libraries could not worry about it
 - [ ] Find a way to get rid of the logic that hiccupToElement needs
 Basically refactor `hiccupToElement` and `apply` so that there's less duplication
 - [ ] Write tests

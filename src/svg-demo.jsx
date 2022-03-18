@@ -135,7 +135,7 @@ const Example5 = () => (
   <Svg viewBox="0 0 5 1" width="800" height="200">
     <defs>
       <pattern id="hover-hatch" viewBox="0 0 1 1" width="10%" height="10%">
-        <path d="M0,1 L1,0 M-0.5,0.5 L0.5,-0.5 M0.5,1.5 L1.5,0.5" stroke="#88a" fill="none" stroke-width="0.2" />
+        <path d="M0,1 L1,0 M-0.5,0.5 L0.5,-0.5 M0.5,1.5 L1.5,0.5" stroke="#aa9a" fill="none" stroke-width="0.1" />
       </pattern>
     </defs>
 
@@ -174,11 +174,12 @@ const myData = [0, 12, 0.9, 3.5];
 
 const Example6 = ({ data }) => {
   const maxData = Math.max(...data);
+  const maxHeight  = 0.92;
   return (
     <Svg width="200" height="200" viewBox="0 0 1 1">
       <defs>
-        <pattern id="chart-hatch" viewBox="0 0 1 1" width="0.05" height="0.05" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-          <path d="M0,0.5 L1,0.5" stroke="#aa8a" fill="none" stroke-width="0.05" />
+        <pattern id="chart-hatch" viewBox="0 0 1 1" width="0.02" height="0.02" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
+          <path d="M0,0.5 L1,0.5" stroke="#aa88" fill="none" stroke-width="0.1" />
         </pattern>
 
         <marker id="arrow" viewBox="0 0 1 1" markerWidth="0.03" markerHeight="0.03" orient="auto" refX="0.5" refY="0.5" markerUnits="userSpaceOnUse">
@@ -193,9 +194,9 @@ const Example6 = ({ data }) => {
           <rect
             class="chart-bar"
             x={idx/data.length * 0.8 + 0.1}
-            y={0.9 - datum/maxData * 0.8}
+            y={0.96 - datum/maxData * maxHeight}
             width="0.1"
-            height={Math.max(datum/maxData * 0.8, 0)}
+            height={Math.max(datum/maxData * maxHeight, 0)}
             stroke="#aa8"
             stroke-width="0.005"
             fill="url(#chart-hatch)" />
@@ -230,7 +231,10 @@ dep(
 const Example7 = ({ x }) => {
   return (
     <Svg viewBox="0 0 10 1">
-      <circle class="animated-circle" cy="0.5" cx={x} r="0.5" fill="red" />
+      <g class="animated-circle" transform={`translate(${x},0)`}>
+        <line x1="0" x2="1" y1="0.5" y2="0.5" stroke="aa8a" stroke-width="0.1" />
+        <line x1="0.5" x2="0.5" y1="0" y2="1" stroke="aa8a" stroke-width="0.1" />
+      </g>
     </Svg>
   );
 }
@@ -245,4 +249,13 @@ const Example7 = ({ x }) => {
   onAny([x], () => {
     insert(document.getElementById('example-7-contents'), <Example7 x={x.value} />);
   });
+}
+
+
+
+// Example 8
+// A text editor
+
+const TextEditor = ({ content, onChange }) => {
+
 }
