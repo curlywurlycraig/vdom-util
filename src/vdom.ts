@@ -16,6 +16,13 @@ const isHic = (thing) =>
       && !Array.isArray(thing[1]);
 
 /**
+   Conform to the jsx factory signature to produce hiccup.
+*/
+export const hic = (name, options, ...children): HicType => {
+  return [name, options || {}, ...children];
+}
+
+/**
  * Adds a dictionary representation of the HTMLElement
  * to the element
  * EX:
@@ -51,6 +58,8 @@ const updateAttrs = (el: TaggedElement, attrs: object) => {
 
 const walk = (hic: HicType, node: Node | undefined, f: Function): any => {
   const afterChildren = hic[2].map((child, idx) => {
+    // TODO something smarter (like with react's key prop) to map nodes to elements in children.
+    // Index is obviously not reliable
     walk(child, node ? node.childNodes[idx] : undefined, f);
   });
 
@@ -86,21 +95,56 @@ const hiccupToElement = (hic: HicType, ns?: string): TaggedElement => {
   })
 };
 
+
+/**
+   Given some HTML element, update that element and its children with the hiccup.
+   This preserves existing HTML elements without removing and creating new ones.
+*/
+export const apply = (hic: HicType, el: TaggedElement) => {
+  return walk(hic, el, (currHic, childrenAfter, currEl) => {
+    const prevHic = currEl._hic ? currEl._hic : [undefined];
+    const [prevTag] = prevHic;
+    const [tag, attrs] = currHic;
+
+    var result = currEl;
+    if (prevTag !== tag || !result) {
+      result = hiccupToElement(hic);
+    }
+
+    // TODO Make a little test (as in on a web page)
+    // that checks that changing an element type (e.g. from <div> to <span>) doesn't disrupt its children state
+
+    updateAttrs(result, attrs);
+
+    childrenAfter.forEach((child, idx) => {
+      if (currEl.childNodes[idx] !== child) {
+        // TODO Look into insertBefore(node) instead of append, so we can get the order right
+        result.appendChild(child);
+      }
+    })
+
+    // TODO Implement deletion of children
+
+    result._hic = currHic;
+    return result;
+  });
+}
+
 /**
    Given some hiccup, resolve any components to their resulting DOM only
    hiccup. That is, only hiccup elements with lower case tag names should remain.
    
    This entails running the components with their attributes.
 */
-const render = ([tag, attrs, ...children]: HicType): HicType => {
+const expand = ([tag, attrs, ...children]: HicType): HicType => {
   if (typeof tag === 'function') {
-    return render(tag({ ...attrs, children }));
+    return expand(tag({ ...attrs, children }));
   }
 
   const renderedChildren = children
         .map((child: HicType) => {
           if (Array.isArray(child) && child.length) {
-            return render(child);
+            return expand(child);
           }
 
           return child;
@@ -108,85 +152,3 @@ const render = ([tag, attrs, ...children]: HicType): HicType => {
 
   return [tag, attrs, ...renderedChildren];
 };
-
-/**
-   Given some HTML element, update that element and its children with the hiccup.
-   This preserves existing HTML elements without removing and creating new ones.
-*/
-export const apply = (hic: HicType, el: TaggedElement) => {
-  const prevHic = el._hic!!;
-  const [prevTag, prevAttrs, ...prevChildren] = prevHic;
-
-  walk(hic, el, (currHic, childrenAfter, currEl, parent) => {
-    const [tag, attrs, ...children] = currHic;
-
-    if (prevTag !== tag) {
-      (el.parentNode!! as HTMLElement).innerHTML = '';
-      (el.parentNode!!).appendChild(hiccupToElement(render(hic)));
-      return el.parentNode;
-    }
-
-    if (!currEl) {
-      return hiccupToElement(currHic);
-    }
-
-    updateAttrs(currEl, attrs);
-
-    currEl._hic = currHic;
-    return currEl;
-  });
-
-  var additionalChildren = 0;
-  children.forEach((child, idx) => {
-    const currChildNode = el.childNodes[idx + additionalChildren];
-    if (!currChildNode) {
-      const newEl = isHic(child) ? hiccupToElement(child) : document.createTextNode(child) as TaggedNode;
-
-      if (!isHic(child)) {
-        newEl._hic = child;
-      }
-
-      el.appendChild(newEl);
-      additionalChildren += 1;
-    } else if (isHic(child)) {
-      update(currChildNode, child);
-    } else if (currChildNode.nodeType === 1) {
-      // A HTML element used to be here, but now it needs to be a text node.
-      // Replace it
-      const newNode = document.createTextNode(child) as TaggedNode;
-      newNode._hic = child;
-      currChildNode.parentNode.replaceChild(newNode, currChildNode);
-    } else {
-      if (currChildNode.nodeValue !== child.toString()) {
-        currChildNode.nodeValue = child;
-      }
-    }
-  });
-
-  // Delete remaining children
-  while (el.childNodes.length > children.length) {
-    el.childNodes[children.length].remove();
-  }
-
-  el._hic = hic;
-  return el;
-}
-
-/**
-   Render the hic and insert it into the element.
-*/
-export const insert = (hostEl, hic) => {
-  const renderedChild = hostEl.children[0];
-  if (!renderedChild || renderedChild._hic === undefined) {
-    return reset(hostEl, hic);
-  }
-
-  return update(renderedChild, render(hic));
-}
-
-/**
-   Conform to the jsx factory signature to produce hiccup.
-*/
-export const hic = (name, options, ...children): HicType => {
-  return [name, options || {}, ...children];
-}
