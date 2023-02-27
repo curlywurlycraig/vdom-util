@@ -4,7 +4,10 @@
     "description": "Simple a light utilities for updating the DOM.",
     "main": "out/index.js",
     "scripts": {
-        "build": "./bin/build"
+        "build": "esbuild --bundle --outdir=out --jsx-factory=hic src/demo.jsx",
+        "build-min": "esbuild --bundle --minify --outdir=out --jsx-factory=hic src/demo.jsx",
+        "build-util-min": "esbuild --bundle --minify --outdir=out src/vdom.ts",
+        "build-util": "esbuild --bundle --outdir=out src/vdom.ts"
     },
     "repository": {
         "type": "git",
