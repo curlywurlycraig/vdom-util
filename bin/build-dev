@@ -1,3 +1,0 @@
-#!/bin/bash
-
-esbuild --jsx-factory=hic --bundle --outdir=out src/*.jsx

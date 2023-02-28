@@ -2,7 +2,7 @@ Little virtualdom utilities.
 
 # Building
 
-`npm run build`
+`npm run build-min`
 
 # Running
 
