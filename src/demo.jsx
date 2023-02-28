@@ -16,9 +16,29 @@ const Outlined = ({ children }) => {
   </div>
 )};
 
-const el = <Outlined><Outlined><p>Hello world!</p></Outlined></Outlined>;
-const expanded = expand(el);
+const Main = ({ value, onChange }) => {
+  const ContainerEl = value === "test" ? "div" : Outlined;
+  const result = (
+    <ContainerEl>
+      <input value={value} input={onChange}></input>
+      <ContainerEl><p>{ value }</p></ContainerEl>
+    </ContainerEl>
+  );
+  return result;
+}
 
-const newEl = apply(expanded, mainEl);
+const content = atom("")
+let newEl = apply(expand(<div></div>), mainEl);
 
-apply(expanded, newEl);
+content.addTrigger(v => {
+  const onChange = (e) => {
+    console.log(e.target.value);
+    content.set(e.target.value);
+  }
+
+  console.log('ok')
+  const expanded = expand(<Main value={v} onChange={onChange} />);
+  newEl = apply(expanded, newEl);
+})
+
+content.set("hello, world!")

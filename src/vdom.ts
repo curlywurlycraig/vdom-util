@@ -115,13 +115,10 @@ export const apply = (hic: HicType, el: TaggedElement) => {
       result = document.createElementNS(currentNS, tag) as TaggedElement;
     }
 
-    // TODO Make a little test (as in on a web page)
-    // that checks that changing an element type (e.g. from <div> to <span>) doesn't disrupt its children state
-
     updateAttrs(result, attrs);
 
     childrenAfter.forEach((child, idx) => {
-      if (child && result.childNodes[idx] !== child) {
+      if (child && !(result.childNodes[idx] && result.childNodes[idx].isEqualNode(child))) {
         // TODO Look into insertBefore(node) instead of append, so we can get the order right
         result.appendChild(child);
       }
@@ -133,6 +130,9 @@ export const apply = (hic: HicType, el: TaggedElement) => {
     return result;
   });
 
-  parent?.replaceChild(result, el);
+  if (result !== el) {
+    parent?.replaceChild(result, el);
+  }
+
   return result;
 }
