@@ -142,7 +142,3 @@ export const apply = (hic: any, el: TaggedElement | undefined) => {
   
   return result;
 }
-
-
-
-// HOCs
