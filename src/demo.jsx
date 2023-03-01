@@ -1,11 +1,11 @@
 import { hic, apply, render } from "./vdom.js";
-import { atom } from "./atom.js";
+import { withPropMap, withState, compose } from "./hoc.js";
 import { style } from "./style.js";
 
 const mainEl = document.getElementById("main");
-const Outlined = ({ children }) => {
+const Outlined = ({ children, ref }) => {
   return (
-    <div>
+    <div ref={ref}>
       <div style={style({border: '1px solid #445', padding: '10px'})}>
         { children }
       </div>
@@ -13,30 +13,37 @@ const Outlined = ({ children }) => {
   );
 };
 
-const Main = ({ value, onChange }) => {
-  const result = (
-    <Outlined>
+const MyForm = ({ value, onChange, onSubmitClick, ref }) => {
+  return <Outlined ref={ref}>
       <input
         style={style({"margin-bottom": "10px"})}
         value={value}
         input={onChange} />
 
-      <Outlined><p>{ value }</p></Outlined>
-    </Outlined>
-  );
-  return result;
+      <button click={() => onSubmitClick(value)}>Submit</button>
+  </Outlined>
 }
 
-const content = atom("")
-let newEl = apply(render(<div></div>), mainEl);
+const WrappedForm = compose(
+  withState({ formContent: "hello" }),
+  withPropMap(
+    ({ formContent, setFormContent }) =>
+    ({ value: formContent, onChange: e => setFormContent(e.target.value)})
+  ),
+  MyForm
+);
 
-content.addTrigger(v => {
-  const onChange = (e) => {
-    content.set(e.target.value);
+const Main = compose(
+  withState({ submittedResult: null }),
+  ({ submittedResult, setSubmittedResult, ref }) => {
+    return (
+      <div ref={ref}>
+        <WrappedForm onSubmitClick={setSubmittedResult} />
+        <WrappedForm onSubmitClick={setSubmittedResult} />
+        <p>{submittedResult}</p>
+      </div>
+    );
   }
+)
 
-  const rendered = render(<Main value={v} onChange={onChange} />);
-  newEl = apply(rendered, newEl);
-})
-
-content.set("hello, world!")
+apply(render(<Main />), mainEl);

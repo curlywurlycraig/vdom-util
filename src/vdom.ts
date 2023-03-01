@@ -120,7 +120,7 @@ export const apply = (hic: any, el: TaggedElement | undefined) => {
 
   // Apply each child and assign as a child to this element
   // TODO Handle deletion, re-ordering, IDs and so on.
-  // Should be able to use the key each child to attach to the right entry
+  // Should be able to use the child keys to attach to the right entry
   const children = isHic(hic) ? hic[2] : [];
   children.forEach((child, idx) => {
     const newChildEl = apply(child, el ? el.childNodes[idx] : undefined);
@@ -142,3 +142,7 @@ export const apply = (hic: any, el: TaggedElement | undefined) => {
   
   return result;
 }
+
+
+
+// HOCs
