@@ -32,21 +32,23 @@ export const hic = (name, options, ...children): HicType => {
    
    This entails running the components with their attributes.
 */
-export const expand = ([tag, attrs, children]: HicType): HicType => {
-  const expandedChildren = children
-    .map((child: HicType) => {
+export const render = ([tag, attrs, children]: HicType, key = "r"): HicType => {
+  attrs.key = attrs.key || key;
+  const renderedChildren = children
+    .map((child: HicType, idx) => {
       if (isHic(child)) {
-        return expand(child);
+        return render(child, key + ".c" + (child[1].key || idx));
       }
 
       return child;
     });
 
   if (typeof tag === 'function') {
-    return expand(tag({ ...attrs, children: expandedChildren }));
+    const renderResult = tag({ ...attrs, children: renderedChildren });
+    return render(renderResult, key + ".e" + (renderResult?.key || ""));
   }
 
-  return new HicType(tag, attrs, expandedChildren);
+  return new HicType(tag, attrs, renderedChildren);
 };
 
 /**
@@ -117,7 +119,8 @@ export const apply = (hic: any, el: TaggedElement | undefined) => {
   updateAttrs(result, attrs);
 
   // Apply each child and assign as a child to this element
-  // TODO Handle deletion, re-ordering, IDs and so on
+  // TODO Handle deletion, re-ordering, IDs and so on.
+  // Should be able to use the key each child to attach to the right entry
   const children = isHic(hic) ? hic[2] : [];
   children.forEach((child, idx) => {
     const newChildEl = apply(child, el ? el.childNodes[idx] : undefined);
@@ -131,6 +134,10 @@ export const apply = (hic: any, el: TaggedElement | undefined) => {
 
   if (result !== el) {
     parent?.replaceChild(result, el!!);
+  }
+
+  if (typeof attrs.ref === "function") {
+    attrs.ref(result);
   }
   
   return result;

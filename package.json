@@ -6,8 +6,8 @@
     "scripts": {
         "build": "esbuild --bundle --outdir=out --jsx-factory=hic src/demo.jsx",
         "build-min": "esbuild --bundle --minify --outdir=out --jsx-factory=hic src/demo.jsx",
-        "build-util-min": "esbuild --bundle --minify --outdir=out src/vdom.ts",
-        "build-util": "esbuild --bundle --outdir=out src/vdom.ts",
+        "build-util-min": "esbuild --minify --outdir=out src/vdom.ts",
+        "build-util": "esbuild --outdir=out src/vdom.ts",
         "serve": "npx http-server"
     },
     "repository": {
