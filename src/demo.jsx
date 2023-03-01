@@ -12,6 +12,7 @@ const Outlined = ({ children }) => {
 
     <div style={style({border: '1px solid #445', padding: '10px'})}>
       { children }
+      { null }
     </div>
   </div>
 )};

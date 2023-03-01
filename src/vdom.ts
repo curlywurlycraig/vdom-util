@@ -90,10 +90,18 @@ const updateAttrs = (el: TaggedElement, attrs: object) => {
 export const apply = (hic: any, el: TaggedElement | undefined) => {
   const parent = el?.parentNode;
   let result: TaggedElement | undefined = el;
+
+  if (!hic && hic !== "") {
+    return null;
+  }
   
   // Basically leaf text nodes. Early return because they cannot have children
   if (!isHic(hic)) {
-    return document.createTextNode(hic);
+    if (el?.nodeType !== 3) {
+      return document.createTextNode(hic);
+    }
+    el.nodeValue = hic;
+    return el;
   }
 
   const prevTag = el?._hic?.[0]
@@ -124,6 +132,6 @@ export const apply = (hic: any, el: TaggedElement | undefined) => {
   if (result !== el) {
     parent?.replaceChild(result, el!!);
   }
-
+  
   return result;
 }
