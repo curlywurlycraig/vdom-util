@@ -83,55 +83,46 @@ const updateAttrs = (el: TaggedElement, attrs: object) => {
   return el;
 }
 
-const walk = (hic: HicType, node: Node | undefined, f: Function): any => {
-  const children = isHic(hic) ? hic[2] : [];
-  const afterChildren = children.map((child, idx) => {
-    // TODO something smarter (like with react's key prop) to map nodes to elements in children.
-    // Index is obviously not reliable
-    return walk(child, node ? node.childNodes[idx] : undefined, f);
-  });
-
-  return f(hic, afterChildren, node);
-}
-
 /**
    Given some HTML element, update that element and its children with the hiccup.
    This preserves existing HTML elements without removing and creating new ones.
 */
-export const apply = (hic: HicType, el: TaggedElement) => {
-  const parent = el.parentNode;
-  const result = walk(hic, el, (currHic, childrenAfter, currEl) => {
-    if (!isHic(currHic)) {
-      return document.createTextNode(currHic);
+export const apply = (hic: any, el: TaggedElement | undefined) => {
+  const parent = el?.parentNode;
+  let result: TaggedElement | undefined = el;
+  
+  // Basically leaf text nodes. Early return because they cannot have children
+  if (!isHic(hic)) {
+    return document.createTextNode(hic);
+  }
+
+  const prevTag = el?._hic?.[0]
+  const [tag, attrs] = hic;
+
+  // New element case
+  if (prevTag !== tag || !result) {
+    const currentNS = attrs.xmlns || (tag === 'svg' ? 'http://www.w3.org/2000/svg' : 'http://www.w3.org/1999/xhtml');
+    result = document.createElementNS(currentNS, tag) as TaggedElement;
+  }
+
+  // Update element with attrs
+  updateAttrs(result, attrs);
+
+  // Apply each child and assign as a child to this element
+  // TODO Handle deletion, re-ordering, IDs and so on
+  const children = isHic(hic) ? hic[2] : [];
+  children.forEach((child, idx) => {
+    const newChildEl = apply(child, el ? el.childNodes[idx] : undefined);
+    if (newChildEl && !(result?.childNodes[idx] && result.childNodes[idx].isEqualNode(newChildEl))) {
+      // TODO Look into insertBefore(node) instead of append, so we can get the order right
+      result?.appendChild(newChildEl);
     }
-
-    const prevHic = currEl?._hic ? currEl._hic : [undefined];
-    const [prevTag] = prevHic;
-    const [tag, attrs] = currHic;
-
-    var result = currEl;
-    if (prevTag !== tag || !result) {
-      const currentNS = attrs.xmlns || (tag === 'svg' ? 'http://www.w3.org/2000/svg' : 'http://www.w3.org/1999/xhtml');
-      result = document.createElementNS(currentNS, tag) as TaggedElement;
-    }
-
-    updateAttrs(result, attrs);
-
-    childrenAfter.forEach((child, idx) => {
-      if (child && !(result.childNodes[idx] && result.childNodes[idx].isEqualNode(child))) {
-        // TODO Look into insertBefore(node) instead of append, so we can get the order right
-        result.appendChild(child);
-      }
-    })
-
-    // TODO Implement deletion of children
-
-    result._hic = currHic;
-    return result;
   });
 
+  result._hic = hic;
+
   if (result !== el) {
-    parent?.replaceChild(result, el);
+    parent?.replaceChild(result, el!!);
   }
 
   return result;

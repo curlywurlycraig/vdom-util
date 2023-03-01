@@ -32,11 +32,9 @@ let newEl = apply(expand(<div></div>), mainEl);
 
 content.addTrigger(v => {
   const onChange = (e) => {
-    console.log(e.target.value);
     content.set(e.target.value);
   }
 
-  console.log('ok')
   const expanded = expand(<Main value={v} onChange={onChange} />);
   newEl = apply(expanded, newEl);
 })
