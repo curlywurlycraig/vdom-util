@@ -135,10 +135,9 @@ export const apply = (hic: any, el: TaggedElement | undefined) => {
 
   if (result !== el) {
     parent?.replaceChild(result, el!!);
-  }
-
-  if (typeof attrs.ref === "function") {
-    attrs.ref(result);
+    if (typeof attrs.ref === "function") {
+      attrs.ref(result);
+    }
   }
   
   return result;

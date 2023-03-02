@@ -38,7 +38,7 @@ export const withState = (stateShape) => (WrappedComponent) => {
           if (ref) {
             apply(
               newEl,
-              refsByKey[key]
+              ref
             );
           }
         }
