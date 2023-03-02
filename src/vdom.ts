@@ -32,20 +32,21 @@ export const hic = (name, options, ...children): HicType => {
    
    This entails running the components with their attributes.
 */
-export const render = ([tag, attrs, children]: HicType, key = "r"): HicType => {
+export const render = (hic: HicType, key = "r"): HicType => {
+  if (!isHic(hic)) {
+    return hic;
+  }
+
+  const [tag, attrs, children] = hic;
   attrs.key = attrs.key || key;
   const renderedChildren = children
     .map((child: HicType, idx) => {
-      if (isHic(child)) {
-        return render(child, key + ".c" + (child[1].key || idx));
-      }
-
-      return child;
+      return render(child, key + "c" + (child?.[1]?.key || idx));
     });
 
   if (typeof tag === 'function') {
     const renderResult = tag({ ...attrs, children: renderedChildren });
-    return render(renderResult, key + ".e" + (renderResult?.key || ""));
+    return render(renderResult, key + "e" + (renderResult?.key || ""));
   }
 
   return new HicType(tag, attrs, renderedChildren);

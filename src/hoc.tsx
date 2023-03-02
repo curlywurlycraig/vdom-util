@@ -6,7 +6,7 @@ export const withState = (stateShape) => (WrappedComponent) => {
   const settersByKey = {};
 
   const insertProps = (key, props) => {
-    const result = { ...props };
+    const result = { key, ...props };
     Object.keys(stateShape).forEach((k) => {
       result[k] = stateByKey[key][k];
       result["set"+k[0].toUpperCase()+k.slice(1)] = settersByKey[key][k];
@@ -28,14 +28,19 @@ export const withState = (stateShape) => (WrappedComponent) => {
         settersByKey[key][k] = (newV) => {
           stateByKey[key][k] = newV;
           const newProps = insertProps(key, props);
-          apply(
-            render(
-              <WrappedComponent
-                ref={onRef}
-                {...newProps} />
-            ),
-            refsByKey[key]
+          const newEl = render(
+            <WrappedComponent
+              ref={onRef}
+              {...newProps} />,
+              key+"e"
           );
+          const ref = refsByKey[key];
+          if (ref) {
+            apply(
+              newEl,
+              refsByKey[key]
+            );
+          }
         }
       });
     }

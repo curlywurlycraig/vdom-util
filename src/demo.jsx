@@ -2,13 +2,25 @@ import { hic, apply, render } from "./vdom.js";
 import { withPropMap, withState, compose } from "./hoc.js";
 import { style } from "./style.js";
 
-const mainEl = document.getElementById("main");
+// Demo of a component that doesn't render anything to the DOM.
+const LogInc = compose(
+  withState({ state: 0 }),
+
+  ({ state, setState }) => {
+    console.log('state is', state);
+    if (state < 10) {
+      setState(state + 1);
+    }
+  }
+)
+
 const Outlined = ({ children, ref }) => {
   return (
     <div ref={ref}>
       <div style={style({border: '1px solid #445', padding: '10px'})}>
         { children }
       </div>
+      <LogInc />
     </div>
   );
 };
@@ -28,13 +40,15 @@ const WrappedForm = compose(
   withState({ formContent: "hello" }),
   withPropMap(
     ({ formContent, setFormContent }) =>
-    ({ value: formContent, onChange: e => setFormContent(e.target.value)})
+    ({ value: formContent, onChange: e => setFormContent(e.target.value) })
   ),
+
   MyForm
 );
 
 const Main = compose(
   withState({ submittedResult: null }),
+
   ({ submittedResult, setSubmittedResult, ref }) => {
     return (
       <div ref={ref}>
@@ -46,4 +60,5 @@ const Main = compose(
   }
 )
 
+const mainEl = document.getElementById("main");
 apply(render(<Main />), mainEl);
