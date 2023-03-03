@@ -2,6 +2,7 @@ class HicType extends Array {}
 
 interface Tagged {
   _hic?: HicType
+  _elPositionMap?: Record<string, number>,
   value?: any
 }
 
@@ -120,18 +121,23 @@ export const apply = (hic: any, el: TaggedElement | undefined) => {
   updateAttrs(result, attrs);
 
   // Apply each child and assign as a child to this element
-  // TODO Handle deletion, re-ordering, IDs and so on.
-  // Should be able to use the child keys to attach to the right entry
+  // TODO Handle children that is a dynamic array (grows in size)
+  // TODO This is my least favourite part of the code. It's just ugly
+  // (and therefore probably wrong/overcomplicated)
+  result._hic = hic;
+  result._elPositionMap = result._elPositionMap || {};
   const children = isHic(hic) ? hic[2] : [];
   children.forEach((child, idx) => {
-    const newChildEl = apply(child, el ? el.childNodes[idx] : undefined);
-    if (newChildEl && !(result?.childNodes[idx] && result.childNodes[idx].isEqualNode(newChildEl))) {
+    const childKey = child?.[1]?.key || ("text" + idx);
+    const existingNodeIdx = result?._elPositionMap?.[childKey];
+    const existingNode = existingNodeIdx !== undefined ? el?.childNodes[existingNodeIdx] : undefined;
+    const newChildEl = apply(child, existingNode as TaggedElement);
+    if (newChildEl && !newChildEl.isEqualNode(existingNode || null)) {
       // TODO Look into insertBefore(node) instead of append, so we can get the order right
+      result._elPositionMap[childKey] = result?.childNodes.length;
       result?.appendChild(newChildEl);
     }
   });
-
-  result._hic = hic;
 
   if (result !== el) {
     parent?.replaceChild(result, el!!);

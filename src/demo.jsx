@@ -17,10 +17,10 @@ const LogInc = compose(
 const Outlined = ({ children, ref }) => {
   return (
     <div ref={ref}>
+      <LogInc />
       <div style={style({border: '1px solid #445', padding: '10px'})}>
         { children }
       </div>
-      <LogInc />
     </div>
   );
 };
