@@ -112,3 +112,56 @@ header {
     border-bottom: 1px solid #557;
     margin-bottom: 20px;
 }
+
+.editor_container {
+    position: relative;
+    min-height: 200px;
+    overflow: scroll;
+}
+
+.editor_textarea {
+    font-family: monospace;
+    font-size: 1rem;
+    line-height: 1.3rem;
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding: 10px;
+    margin: 0;
+    color: transparent;
+    caret-color: white;
+    background-color: #ffffff11;
+    width: 100%;
+    box-sizing: border-box;
+    bottom: 0;
+
+    border: 0;
+    outline: 0;
+    overflow: hidden;
+}
+
+.editor_draw {
+    font-family: monospace;
+    font-size: 1rem;
+    line-height: 1.3rem;
+    position: absolute;
+    padding: 10px;
+    margin: 0;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    white-space: break-spaces;
+}
+
+code {
+    font-family: monospace;
+}
+
+.editor_span {
+    padding: 0;
+    margin: 0;
+}
+
+.editor_keyword {
+    color: #aa8bec;
+}

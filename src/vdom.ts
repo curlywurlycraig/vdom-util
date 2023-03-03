@@ -128,28 +128,33 @@ export const apply = (hic: any, el: TaggedElement | undefined) => {
   result._elPositionMap = result._elPositionMap || {};
   const children = isHic(hic) ? hic[2] : [];
   const foundKeys = {};
+  let newChildCount = 0;
   children.forEach((child, idx) => {
-    console.log('child is ', child, idx)
     const childKey = child?.[1]?.key || ("__text" + idx);
     foundKeys[childKey] = true;
     const existingNodeIdx = result?._elPositionMap?.[childKey];
     const existingNode = existingNodeIdx !== undefined ? el?.childNodes[existingNodeIdx] : undefined;
     const newChildEl = apply(child, existingNode as TaggedElement);
-    console.log('are equal', newChildEl?.isEqualNode(existingNode))
     if (newChildEl) {
-      result._elPositionMap[childKey] = result?.childNodes.length;
-      console.log('inserting ', newChildEl, idx)
-      result?.insertBefore(newChildEl, el?.childNodes[idx]?.nextSibling || null);
+      if (result?._elPositionMap[childKey] !== newChildCount) {
+        result._elPositionMap[childKey] = newChildCount;
+        result?.insertBefore(newChildEl, el?.childNodes[idx]?.nextSibling || null);
+      }
+      newChildCount++;
     }
   });
 
+  const toDelete = [];
   Object.keys(result._elPositionMap).forEach(k => {
     if (!foundKeys[k]) {
-      console.log('deleting it')
-      result?.removeChild(result?.childNodes[result?._elPositionMap[k]]);
-      delete result?._elPositionMap[k];
+      toDelete.push([result?.childNodes[result?._elPositionMap[k]], k]);
     }
-  })
+  });
+
+  toDelete.forEach(([el, k]) => {
+    result?.removeChild(el);
+    delete result?._elPositionMap[k];
+  });
 
   if (result !== el) {
     parent?.replaceChild(result, el!!);
