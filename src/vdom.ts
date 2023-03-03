@@ -33,7 +33,7 @@ export const hic = (name, options, ...children): HicType => {
    
    This entails running the components with their attributes.
 */
-export const render = (hic: HicType, key = "r"): HicType => {
+export const render = (hic: HicType, key = "__r"): HicType => {
   if (!isHic(hic)) {
     return hic;
   }
@@ -127,17 +127,29 @@ export const apply = (hic: any, el: TaggedElement | undefined) => {
   result._hic = hic;
   result._elPositionMap = result._elPositionMap || {};
   const children = isHic(hic) ? hic[2] : [];
+  const foundKeys = {};
   children.forEach((child, idx) => {
-    const childKey = child?.[1]?.key || ("text" + idx);
+    console.log('child is ', child, idx)
+    const childKey = child?.[1]?.key || ("__text" + idx);
+    foundKeys[childKey] = true;
     const existingNodeIdx = result?._elPositionMap?.[childKey];
     const existingNode = existingNodeIdx !== undefined ? el?.childNodes[existingNodeIdx] : undefined;
     const newChildEl = apply(child, existingNode as TaggedElement);
-    if (newChildEl && !newChildEl.isEqualNode(existingNode || null)) {
-      // TODO Look into insertBefore(node) instead of append, so we can get the order right
+    console.log('are equal', newChildEl?.isEqualNode(existingNode))
+    if (newChildEl) {
       result._elPositionMap[childKey] = result?.childNodes.length;
-      result?.appendChild(newChildEl);
+      console.log('inserting ', newChildEl, idx)
+      result?.insertBefore(newChildEl, el?.childNodes[idx]?.nextSibling || null);
     }
   });
+
+  Object.keys(result._elPositionMap).forEach(k => {
+    if (!foundKeys[k]) {
+      console.log('deleting it')
+      result?.removeChild(result?.childNodes[result?._elPositionMap[k]]);
+      delete result?._elPositionMap[k];
+    }
+  })
 
   if (result !== el) {
     parent?.replaceChild(result, el!!);
