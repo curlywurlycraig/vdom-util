@@ -5,6 +5,7 @@
     "main": "out/index.js",
     "scripts": {
         "build": "esbuild --bundle --outdir=out --jsx-factory=hic src/demo.jsx",
+        "build-test": "esbuild --bundle --outdir=out --jsx-factory=hic src/test.jsx",
         "build-min": "esbuild --bundle --minify --outdir=out --jsx-factory=hic src/demo.jsx",
         "build-util-min": "esbuild --minify --outdir=out src/vdom.ts",
         "build-util": "esbuild --outdir=out src/vdom.ts",

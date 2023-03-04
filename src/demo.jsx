@@ -24,25 +24,6 @@ const Editor = compose(
   }
 )
 
-const SplitSpaces = ({ value }) => {
-  const strings = value ? value.split(" ") : [];
-  return <div>
-    { strings.map(s => <p>{s}</p>)}
-  </div>;
-};
-
-// Demo of a component that doesn't render anything to the DOM.
-const LogInc = compose(
-  withState({ state: 0 }),
-
-  ({ state, setState }) => {
-    console.log('state is', state)
-    if (state < 10) {
-      setState(state + 1);
-    }
-  }
-)
-
 const Outlined = ({ children, ref }) => {
   return (
     <div ref={ref}>

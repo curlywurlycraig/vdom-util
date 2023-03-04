@@ -15,8 +15,26 @@ export const withState = (stateShape) => (WrappedComponent) => {
   }
 
   return ({ key, ...props}) => {
+    const rerender = () => {
+      const newProps = insertProps(key, props);
+      const newEl = render(
+        <WrappedComponent
+          ref={onRef}
+          {...newProps} />,
+          key+"e"
+      );
+      const ref = refsByKey[key];
+      if (ref) {
+        apply(
+          newEl,
+          ref
+        );
+      }
+    }
+
     const onRef = el => {
       refsByKey[key] = el;
+      rerender();
     }
 
     if (!stateByKey[key]) {
@@ -27,20 +45,7 @@ export const withState = (stateShape) => (WrappedComponent) => {
         stateByKey[key][k] = v;
         settersByKey[key][k] = (newV) => {
           stateByKey[key][k] = newV;
-          const newProps = insertProps(key, props);
-          const newEl = render(
-            <WrappedComponent
-              ref={onRef}
-              {...newProps} />,
-              key+"e"
-          );
-          const ref = refsByKey[key];
-          if (ref) {
-            apply(
-              newEl,
-              ref
-            );
-          }
+          rerender();
         }
       });
     }

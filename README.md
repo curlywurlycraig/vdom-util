@@ -10,7 +10,8 @@ Serve this directory and navigate to `/index.html`
 
 # TODO
 
-- [ ] Store a map of keys to child indices on actual DOM nodes
-This will make it easy to handle deletions and reordering, etc
 - [ ] Tests
 Do them in the browser.
+- [ ] Better type annotations
+- [ ] Make a nice code editor as a first project with this tool
+- [ ] post-render effects

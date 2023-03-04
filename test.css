@@ -1,0 +1,16 @@
+.test_container {}
+
+.test_results {
+    border: 1px solid #ffffff36;
+    padding: 0px 10px;
+}
+
+.test_stage {}
+
+.result_fail {
+    color: rgb(237, 157, 157);
+}
+
+.result_pass {
+    color: rgb(137, 191, 137);
+}
