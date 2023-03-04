@@ -14,4 +14,4 @@ Serve this directory and navigate to `/index.html`
 Do them in the browser.
 - [ ] Better type annotations
 - [ ] Make a nice code editor as a first project with this tool
-- [ ] post-render effects
+- [ ] Tidy hoc.tsx and vdom.ts

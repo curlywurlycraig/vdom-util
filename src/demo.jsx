@@ -1,6 +1,18 @@
 import { hic, apply, render } from "./vdom.js";
-import { withPropMap, withState, compose } from "./hoc.js";
-import { style } from "./style.js";
+import { withState, compose } from "./hoc.js";
+
+const StateCheck = compose(
+  withState({ value: 0 }),
+
+  ({ value, setValue, ref }) => {
+    console.log(value);
+    if (value < 10) {
+      setValue(value + 1);
+    }
+
+    return <p ref={ref}>{ value }</p>
+  }
+)
 
 const Editor = compose(
   withState({ width: 0 }),
@@ -24,53 +36,15 @@ const Editor = compose(
   }
 )
 
-const Outlined = ({ children, ref }) => {
-  return (
-    <div ref={ref}>
-      <div style={style({border: '1px solid #445', padding: '10px', "margin-bottom": '10px'})}>
-        { children }
-      </div>
-      <LogInc />
-    </div>
-  );
-};
-
-const MyForm = ({ value, onChange, onSubmitClick, ref }) => {
-  return <Outlined ref={ref}>
-      <input
-        style={style({"margin-bottom": "10px"})}
-        value={value}
-        input={onChange} />
-
-      <button click={() => onSubmitClick(value)}>Submit</button>
-
-      <SplitSpaces value={value} />
-  </Outlined>
-}
-
-const WrappedForm = compose(
-  withState({ formContent: "hello" }),
-  withPropMap(
-    ({ formContent, setFormContent }) =>
-    ({ value: formContent, onChange: e => setFormContent(e.target.value) })
-  ),
-
-  MyForm
-);
-
 const Main = compose(
   withState({
-    submittedResult: null,
     editorContent: ""
   }),
 
-  ({ submittedResult, setSubmittedResult, editorContent, setEditorContent, ref }) => {
+  ({ editorContent, setEditorContent, ref }) => {
     return (
       <div ref={ref}>
-        <WrappedForm onSubmitClick={setSubmittedResult} />
-        <WrappedForm onSubmitClick={setSubmittedResult} />
-        <p><SplitSpaces value={submittedResult} /></p>
-
+        <StateCheck />
         <Editor onChange={setEditorContent} value={editorContent} />
       </div>
     );

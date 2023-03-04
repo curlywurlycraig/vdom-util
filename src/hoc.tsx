@@ -4,6 +4,7 @@ export const withState = (stateShape) => (WrappedComponent) => {
   const stateByKey = {};
   const refsByKey = {};
   const settersByKey = {};
+  const renderResultsByKey = {};
 
   const insertProps = (key, props) => {
     const result = { key, ...props };
@@ -15,26 +16,14 @@ export const withState = (stateShape) => (WrappedComponent) => {
   }
 
   return ({ key, ...props}) => {
-    const rerender = () => {
-      const newProps = insertProps(key, props);
-      const newEl = render(
-        <WrappedComponent
-          ref={onRef}
-          {...newProps} />,
-          key+"e"
-      );
-      const ref = refsByKey[key];
-      if (ref) {
-        apply(
-          newEl,
-          ref
-        );
-      }
-    }
-
     const onRef = el => {
       refsByKey[key] = el;
-      rerender();
+      if (el) {
+        apply(
+          renderResultsByKey[key],
+          el
+        );
+      }
     }
 
     if (!stateByKey[key]) {
@@ -45,7 +34,26 @@ export const withState = (stateShape) => (WrappedComponent) => {
         stateByKey[key][k] = v;
         settersByKey[key][k] = (newV) => {
           stateByKey[key][k] = newV;
-          rerender();
+
+          setTimeout(() => {
+            const newProps = insertProps(key, props);
+            const newEl = render(
+              <WrappedComponent
+                ref={onRef}
+                {...newProps} />,
+                key+"e"
+            );
+
+            const ref = refsByKey[key];
+            renderResultsByKey[key] = newEl;
+
+            if (ref) {
+              apply(
+                newEl,
+                ref
+              );
+            }
+          })
         }
       });
     }
@@ -54,6 +62,37 @@ export const withState = (stateShape) => (WrappedComponent) => {
     return <WrappedComponent
       ref={onRef}
       {...newProps} />;
+  }
+}
+
+export const withWhen = (deps, then) => (WrappedComponent) => {
+  const lastPropsByKey = {};
+
+  const shouldRun = (key, props) => {
+    const lastProps = lastPropsByKey[key];
+    if (!lastProps) {
+      lastPropsByKey[key] = props;
+      return true;
+    }
+
+    for (let i = 0; i < deps.length; i++) {
+      const dep = deps[i];
+      if (lastProps[dep] !== props[dep]) {
+        lastPropsByKey[key] = props;
+        return true;
+      }
+    }
+
+    lastPropsByKey[key] = props;
+    return false;
+  }
+
+  return ({ key, ...props }) => {
+    if (shouldRun(key, props)) {
+      then(props);
+    }
+
+    return <WrappedComponent {...props} />;
   }
 }
 

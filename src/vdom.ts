@@ -121,7 +121,6 @@ export const apply = (hic: any, el: TaggedElement | undefined) => {
   updateAttrs(result, attrs);
 
   // Apply each child and assign as a child to this element
-  // TODO Handle children that is a dynamic array (grows in size)
   // TODO This is my least favourite part of the code. It's just ugly
   // (and therefore probably wrong/overcomplicated)
   result._hic = hic;

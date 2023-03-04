@@ -1,24 +1,52 @@
 import { hic, apply, render } from "./vdom.js";
-import { withState, compose } from "./hoc.js";
+import { withState, compose, withWhen } from "./hoc.js";
 
 const TestBasic = compose(
-  withState({ value: "", hasRun: false }),
+  withState({ value: "" }),
 
-  ({ value, setValue, pass, fail, hasRun, setHasRun, key, ref }) => {
+  ({ value, setValue, pass, fail, ref }) => {
     const onRef = (e) => {
       ref(e);
-      if (!hasRun) {
-        setHasRun(true);
-        pass();
-      }
+      pass();
     }
 
     return <input ref={onRef} value={value} input={e => setValue(e.target.value)} />
   }
 )
 
+const TestWithWhen = compose(
+  withState({ value: 0, evenValue: 0, effectCallCount: 0 }),
+  withWhen(['evenValue'], ({ runCount, evenValue, setEffectCallCount, effectCallCount, value, pass, fail }) => {
+    console.log('evenValue changed!', evenValue, effectCallCount);
+    setEffectCallCount(effectCallCount + 1);
+    if (value === 10) {
+      if (effectCallCount === 5) {
+        console.log('alright!')
+        pass();
+      } else {
+        fail();
+      }
+    }
+  }),
+
+  ({ value, setEvenValue, setValue, ref }) => {
+    console.log('rendering with value', value);
+    if (value < 10) {
+      setValue(value + 1);
+
+      if (value % 2 === 0) {
+        console.log('setting even value as ', value);
+        setEvenValue(value);
+      }
+    }
+
+    return <p>test</p>
+  }
+)
+
 const testCases = [
   TestBasic,
+  TestWithWhen
 ]
 
 const Test = compose(
@@ -28,11 +56,12 @@ const Test = compose(
     const pass = () => {
       setTestResults([...testResults, "."]);
     };
+
     const fail = () => {
       setTestResults([...testResults, "F"]);
     };
 
-    return <div class="test_container" ref={ref}>
+    return <div class="test_container" ref={(v) => { console.log('ref', v); ref(v)}}>
       <div class="test_results">
         <p>
           { testResults.map(res => {
