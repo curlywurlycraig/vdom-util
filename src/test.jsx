@@ -16,12 +16,10 @@ const TestBasic = compose(
 
 const TestWithWhen = compose(
   withState({ value: 0, evenValue: 0, effectCallCount: 0 }),
-  withWhen(['evenValue'], ({ runCount, evenValue, setEffectCallCount, effectCallCount, value, pass, fail }) => {
-    console.log('evenValue changed!', evenValue, effectCallCount);
+  withWhen(['evenValue'], ({ setEffectCallCount, effectCallCount, value, pass, fail }) => {
     setEffectCallCount(effectCallCount + 1);
     if (value === 10) {
       if (effectCallCount === 5) {
-        console.log('alright!')
         pass();
       } else {
         fail();
@@ -30,14 +28,12 @@ const TestWithWhen = compose(
   }),
 
   ({ value, setEvenValue, setValue, ref }) => {
-    console.log('rendering with value', value);
     if (value < 10) {
       setValue(value + 1);
+    }
 
-      if (value % 2 === 0) {
-        console.log('setting even value as ', value);
-        setEvenValue(value);
-      }
+    if (value % 2 === 0) {
+      setEvenValue(value);
     }
 
     return <p>test</p>
@@ -54,14 +50,16 @@ const Test = compose(
 
   ({ testResults, setTestResults, ref }) => {
     const pass = () => {
-      setTestResults([...testResults, "."]);
+      testResults.push('.');
+      setTestResults(testResults);
     };
 
     const fail = () => {
-      setTestResults([...testResults, "F"]);
+      testResults.push('F');
+      setTestResults(testResults);
     };
 
-    return <div class="test_container" ref={(v) => { console.log('ref', v); ref(v)}}>
+    return <div class="test_container" ref={ref}>
       <div class="test_results">
         <p>
           { testResults.map(res => {

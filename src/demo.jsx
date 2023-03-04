@@ -1,19 +1,6 @@
 import { hic, apply, render } from "./vdom.js";
 import { withState, compose } from "./hoc.js";
 
-const StateCheck = compose(
-  withState({ value: 0 }),
-
-  ({ value, setValue, ref }) => {
-    console.log(value);
-    if (value < 10) {
-      setValue(value + 1);
-    }
-
-    return <p ref={ref}>{ value }</p>
-  }
-)
-
 const Editor = compose(
   withState({ width: 0 }),
 
@@ -44,7 +31,6 @@ const Main = compose(
   ({ editorContent, setEditorContent, ref }) => {
     return (
       <div ref={ref}>
-        <StateCheck />
         <Editor onChange={setEditorContent} value={editorContent} />
       </div>
     );
