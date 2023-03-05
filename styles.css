@@ -117,7 +117,7 @@ header {
     position: relative;
     min-height: 500px;
     overflow: scroll;
-    border: 1px solid orange;
+    border: 1px solid #6a6390;
 }
 
 .editor_textarea {
@@ -131,7 +131,7 @@ header {
     margin: 0;
     color: transparent;
     caret-color: white;
-    background-color: #ffffff11;
+    background-color: #00000066;
     width: 100%;
     box-sizing: border-box;
     bottom: 0;
