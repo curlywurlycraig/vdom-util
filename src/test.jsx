@@ -1,49 +1,78 @@
 import { hic, apply, render } from "./vdom.js";
 import { withState, compose, withWhen } from "./hoc.js";
 
-const TestBasic = compose(
-  withState({ value: "" }),
+const BasicExample = () => {
+  return <p>basic example</p>
+}
 
-  ({ value, setValue, pass, fail, ref }) => {
-    const onRef = (e) => {
-      ref(e);
-      pass();
+const testBasic = () => {
+  const stageEl = document.getElementById("test_stage");
+
+  const result = apply(render(
+    <BasicExample />
+  ), stageEl);
+
+  setTimeout(() => {
+    console.log(result)
+    if (result.childNodes.length !== 1) {
+      console.error('expected 1 child but got ', result.childNodes.length);
     }
 
-    return <input ref={onRef} value={value} input={e => setValue(e.target.value)} />
-  }
-)
+    if (result.childNodes[0].textContent !== 'basic example') {
+      console.error('expected "basic example" but got', result.childNodes[0].textContent);
+    }
+  }, 10)
+}
 
-const TestWithWhen = compose(
+const WithWhenExample = compose(
   withState({ value: 0, evenValue: 0, effectCallCount: 0 }),
-  withWhen(['evenValue'], ({ setEffectCallCount, effectCallCount, value, pass, fail }) => {
+  withWhen(['evenValue'], ({ setEffectCallCount, effectCallCount, onWhen }) => {
+    onWhen();
     setEffectCallCount(effectCallCount + 1);
-    if (value === 10) {
-      if (effectCallCount === 5) {
-        pass();
-      } else {
-        fail();
-      }
-    }
   }),
 
-  ({ value, setEvenValue, setValue, ref }) => {
-    if (value < 10) {
-      setValue(value + 1);
+  ({ value, setEvenValue, setValue, onDone, ref }) => {
+    if (value >= 10) {
+      onDone();
+      return <p>done.</p>
     }
+
+    setValue(value + 1);
 
     if (value % 2 === 0) {
       setEvenValue(value);
     }
 
-    return <p>test</p>
+    return <p ref={ref}>test</p>
   }
 )
 
+const testWithWhen = () => {
+  let effectCallCount = 0;
+  const stageEl = document.getElementById("test_stage");
+
+  apply(render(
+    <WithWhenExample
+      onWhen={() => {
+        effectCallCount++;
+      }}
+      onDone={() => {
+        if (effectCallCount !== 5) {
+          console.error("expected 5 side effect calls but got", effectCallCount);
+        }
+      }}
+    />
+  ), stageEl);
+}
+
 const testCases = [
-  TestBasic,
-  TestWithWhen
+  testBasic,
+  testWithWhen
 ]
+
+testCases.forEach(testCase => {
+  testCase();
+})
 
 const Test = compose(
   withState({ testResults: [] }),
@@ -77,5 +106,5 @@ const Test = compose(
   }
 )
 
-const mainEl = document.getElementById("main");
-apply(render(<Test />), mainEl);
+// const mainEl = document.getElementById("main");
+// apply(render(<Test />), mainEl);
