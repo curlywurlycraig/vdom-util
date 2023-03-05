@@ -16,6 +16,8 @@ export const withState = (stateShape) => (WrappedComponent) => {
   }
 
   return ({ key, ...props}) => {
+    let willRerender = false;
+
     const onRef = el => {
       refsByKey[key] = el;
       if (el) {
@@ -35,8 +37,16 @@ export const withState = (stateShape) => (WrappedComponent) => {
         settersByKey[key][k] = (newV) => {
           stateByKey[key][k] = newV;
 
+          // Don't set a timeout if we already plan to re-render.
+          // This avoids excessive re-rendering
+          if (willRerender) {
+            return;
+          }
+
+          willRerender = true;
           setTimeout(() => {
             const newProps = insertProps(key, props);
+            willRerender = false;
             const newEl = render(
               <WrappedComponent
                 ref={onRef}

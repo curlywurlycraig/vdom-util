@@ -6,11 +6,9 @@ const BasicExample = () => {
 }
 
 const testBasic = (pass, fail) => {
-  const stageEl = document.getElementById("test_stage");
-
   const result = apply(render(
     <BasicExample />
-  ), stageEl);
+  ));
 
   setTimeout(() => {
     if (result.childNodes.length !== 1) {
@@ -26,7 +24,7 @@ const testBasic = (pass, fail) => {
     }
 
     pass();
-  }, 10)
+  }, 100)
 }
 
 const WithWhenExample = compose(
@@ -35,7 +33,7 @@ const WithWhenExample = compose(
     setEffectCallCount(effectCallCount + 1);
   }),
 
-  ({ value, setEvenValue, evenValue, setValue, effectCallCount, ref }) => {
+  ({ value, setEvenValue, setValue, effectCallCount, ref }) => {
     if (value > 10) {
       return <p ref={ref}>{ effectCallCount }</p>
     }
@@ -51,11 +49,9 @@ const WithWhenExample = compose(
 )
 
 const testWithWhen = (pass, fail) => {
-  const stageEl = document.getElementById("test_stage");
-
   const result = apply(render(
     <WithWhenExample />
-  ), stageEl);
+  ));
 
   setTimeout(() => {
     if (result.childNodes.length !== 1) {
@@ -72,7 +68,7 @@ const testWithWhen = (pass, fail) => {
     }
 
     pass();
-  }, 10);
+  }, 100);
 }
 
 const testCases = [
