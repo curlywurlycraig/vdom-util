@@ -1,11 +1,8 @@
-.test_container {}
-
-.test_results {
+#test_results {
     border: 1px solid #ffffff36;
     padding: 0px 10px;
+    font-family: monospace;
 }
-
-.test_stage {}
 
 .result_fail {
     color: rgb(237, 157, 157);

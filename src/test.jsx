@@ -5,7 +5,7 @@ const BasicExample = () => {
   return <p>basic example</p>
 }
 
-const testBasic = () => {
+const testBasic = (pass, fail) => {
   const stageEl = document.getElementById("test_stage");
 
   const result = apply(render(
@@ -13,28 +13,31 @@ const testBasic = () => {
   ), stageEl);
 
   setTimeout(() => {
-    console.log(result)
     if (result.childNodes.length !== 1) {
       console.error('expected 1 child but got ', result.childNodes.length);
+      fail();
+      return;
     }
 
     if (result.childNodes[0].textContent !== 'basic example') {
       console.error('expected "basic example" but got', result.childNodes[0].textContent);
+      fail();
+      return;
     }
+
+    pass();
   }, 10)
 }
 
 const WithWhenExample = compose(
   withState({ value: 0, evenValue: 0, effectCallCount: 0 }),
-  withWhen(['evenValue'], ({ setEffectCallCount, effectCallCount, onWhen }) => {
-    onWhen();
+  withWhen(['evenValue'], ({ setEffectCallCount, effectCallCount }) => {
     setEffectCallCount(effectCallCount + 1);
   }),
 
-  ({ value, setEvenValue, setValue, onDone, ref }) => {
-    if (value >= 10) {
-      onDone();
-      return <p>done.</p>
+  ({ value, setEvenValue, evenValue, setValue, effectCallCount, ref }) => {
+    if (value > 10) {
+      return <p ref={ref}>{ effectCallCount }</p>
     }
 
     setValue(value + 1);
@@ -43,26 +46,33 @@ const WithWhenExample = compose(
       setEvenValue(value);
     }
 
-    return <p ref={ref}>test</p>
+    return <p ref={ref}>{ effectCallCount }</p>
   }
 )
 
-const testWithWhen = () => {
-  let effectCallCount = 0;
+const testWithWhen = (pass, fail) => {
   const stageEl = document.getElementById("test_stage");
 
-  apply(render(
-    <WithWhenExample
-      onWhen={() => {
-        effectCallCount++;
-      }}
-      onDone={() => {
-        if (effectCallCount !== 5) {
-          console.error("expected 5 side effect calls but got", effectCallCount);
-        }
-      }}
-    />
+  const result = apply(render(
+    <WithWhenExample />
   ), stageEl);
+
+  setTimeout(() => {
+    if (result.childNodes.length !== 1) {
+      console.error('expected 1 child but got ', result.childNodes.length);
+      fail();
+      return;
+    }
+
+    // 0, 2, 4, 6, 8, 10
+    if (result.childNodes[0].textContent !== '6') {
+      console.error('expected 6 but got', result.childNodes[0].textContent);
+      fail();
+      return;
+    }
+
+    pass();
+  }, 10);
 }
 
 const testCases = [
@@ -70,41 +80,44 @@ const testCases = [
   testWithWhen
 ]
 
-testCases.forEach(testCase => {
-  testCase();
-})
+const runTests = () => {
+  const results = [];
+  const resultsEl = apply(
+    render(<TestResults results={results} />),
+    document.getElementById("test_results")
+  );
 
-const Test = compose(
-  withState({ testResults: [] }),
+  const pass = (testCase) => {
+    console.log('case passed', testCase.name);
+    results.push('.');
+    apply(render(<TestResults results={results} />), resultsEl);
+  };
 
-  ({ testResults, setTestResults, ref }) => {
-    const pass = () => {
-      testResults.push('.');
-      setTestResults(testResults);
-    };
+  const fail = (testCase) => {
+    console.error('case failed', testCase.name);
+    results.push('F');
+    apply(render(<TestResults results={results} />), resultsEl);
+  };
 
-    const fail = () => {
-      testResults.push('F');
-      setTestResults(testResults);
-    };
+  testCases.forEach(testCase => {
+    testCase(
+      () => pass(testCase),
+      () => fail(testCase));
+  })
+}
 
-    return <div class="test_container" ref={ref}>
-      <div class="test_results">
-        <p>
-          { testResults.map(res => {
-              const className = res === 'F' ? "result_fail" : "result_pass";
-              return <span class={className}>{ res }</span>;
-            }
-          )}
-        </p>
-      </div>
-
-      <div class="test_stage">
-        { testCases.map(Case => <Case pass={pass} fail={fail} />) }
-      </div>
-    </div>
+const TestResults = compose(
+  ({ results }) => {
+    return <div id="test_results">
+      <p>
+        { results.map(res => {
+            const className = res === 'F' ? "result_fail" : "result_pass";
+            return <span class={className}>{ res }</span>;
+          }
+        )}
+      </p>
+    </div>;
   }
 )
 
-// const mainEl = document.getElementById("main");
-// apply(render(<Test />), mainEl);
+runTests();
