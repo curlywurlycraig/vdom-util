@@ -115,8 +115,9 @@ header {
 
 .editor_container {
     position: relative;
-    min-height: 200px;
+    min-height: 500px;
     overflow: scroll;
+    border: 1px solid orange;
 }
 
 .editor_textarea {
@@ -126,7 +127,7 @@ header {
     position: absolute;
     top: 0;
     left: 0;
-    padding: 10px;
+    padding: 5px;
     margin: 0;
     color: transparent;
     caret-color: white;
@@ -145,7 +146,7 @@ header {
     font-size: 1rem;
     line-height: 1.3rem;
     position: absolute;
-    padding: 10px;
+    padding: 5px;
     margin: 0;
     top: 0;
     left: 0;
@@ -163,5 +164,5 @@ code {
 }
 
 .editor_keyword {
-    color: #aa8bec;
+    color: #7875fc;
 }
