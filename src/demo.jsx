@@ -1,5 +1,6 @@
 import { hic, apply, render } from "./vdom.js";
 import { withState, compose } from "./hoc.js";
+import "./token/tokenizer.js";
 
 const Editor = compose(
   withState({ width: 0 }),

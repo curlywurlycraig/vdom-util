@@ -23,9 +23,3 @@ Serve this directory and navigate to `/index.html`
 # Tests
 
 Tests are executed in browser at `/test.html` after running `npm run build-test`
-
-# TODO
-
-- [ ] Better type annotations
-- [ ] Make a nice code editor as a first project with this tool
-- [ ] Tidy hoc.tsx and vdom.ts
