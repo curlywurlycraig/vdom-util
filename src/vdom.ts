@@ -122,14 +122,22 @@ export const apply = (hic: any, el: TaggedElement | undefined) => {
 
   // Apply each child and assign as a child to this element
   // TODO This is my least favourite part of the code. It's just ugly
-  // (and therefore probably wrong/overcomplicated)
+  // and therefore probably wrong/overcomplicated. There has got
+  // to be a tidier way to do this.
   result._hic = hic;
   result._elPositionMap = result._elPositionMap || {};
   const children = isHic(hic) ? hic[2] : [];
   const foundKeys = {};
   let newChildCount = 0;
+  let textIdx = 0;
   children.forEach((child, idx) => {
-    const childKey = child?.[1]?.key || ("__text" + idx);
+    let childKey;
+    if (!child?.[1]?.key) {
+      childKey = "__text" + textIdx;
+      textIdx++;
+    } else {
+      childKey = child?.[1]?.key;
+    }
     foundKeys[childKey] = true;
     const existingNodeIdx = result?._elPositionMap?.[childKey];
     const existingNode = existingNodeIdx !== undefined ? el?.childNodes[existingNodeIdx] : undefined;
