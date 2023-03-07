@@ -1,7 +1,7 @@
 #test_results {
-    border: 1px solid #ffffff36;
     padding: 0px 10px;
     font-family: monospace;
+    font-size: 1.1rem;
 }
 
 .result_fail {

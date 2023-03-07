@@ -6,7 +6,7 @@
 
 .editor_textarea {
     font-family: monospace;
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     line-height: 1.3rem;
     position: absolute;
     top: 0;
@@ -17,6 +17,7 @@
     caret-color: white;
     background-color: #0e0419;
     width: 100%;
+    height: 100%;
     box-sizing: border-box;
     bottom: 0;
 
@@ -27,7 +28,7 @@
 
 .editor_draw {
     font-family: monospace;
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     line-height: 1.3rem;
     position: absolute;
     padding: 5px;

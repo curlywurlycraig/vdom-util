@@ -121,48 +121,30 @@ export const apply = (hic: any, el: TaggedElement | undefined) => {
   updateAttrs(result, attrs);
 
   // Apply each child and assign as a child to this element
-  // TODO This is my least favourite part of the code. It's just ugly
-  // and therefore probably wrong/overcomplicated. There has got
-  // to be a tidier way to do this.
   result._hic = hic;
   result._elPositionMap = result._elPositionMap || {};
   const children = isHic(hic) ? hic[2] : [];
-  const foundKeys = {};
-  let newChildCount = 0;
-  let textIdx = 0;
-  children.forEach((child, idx) => {
-    let childKey;
-    if (!child?.[1]?.key) {
-      childKey = "__text" + textIdx;
-      textIdx++;
-    } else {
-      childKey = child?.[1]?.key;
-    }
-    foundKeys[childKey] = true;
-    const existingNodeIdx = result?._elPositionMap?.[childKey];
-    const existingNode = existingNodeIdx !== undefined ? el?.childNodes[existingNodeIdx] : undefined;
-    const newChildEl = apply(child, existingNode as TaggedElement);
-    if (newChildEl) {
-      if (result?._elPositionMap[childKey] !== newChildCount) {
-        result._elPositionMap[childKey] = newChildCount;
-        result?.insertBefore(newChildEl, el?.childNodes[idx]?.nextSibling || null);
-      }
-      newChildCount++;
-    }
-  });
+  const newChildren = children.map((child, idx) => {
+    const existingNode = el?.childNodes[idx];
+    return apply(child, existingNode as TaggedElement);
+  }).filter(c => c);
 
-  const toDelete = [];
-  Object.keys(result._elPositionMap).forEach(k => {
-    if (!foundKeys[k]) {
-      toDelete.push([result?.childNodes[result?._elPositionMap[k]], k]);
+  for (let i = newChildren.length - 1; i >= 0; i--) {
+    const currChild = newChildren[i];
+    const desiredNextSibling = newChildren[i+1] || null;
+    const existingNextSibling = currChild.nextSibling;
+    if (desiredNextSibling !== existingNextSibling || !currChild.parentNode || i === newChildren.length - 1) {
+      console.log('inserting ', currChild, 'before ', desiredNextSibling, existingNextSibling);
+      // TODO I am here. for some reason the last node isn't going in
+      result?.insertBefore(currChild, desiredNextSibling);
     }
-  });
+  }
 
-  toDelete.forEach(([el, k]) => {
-    result?.removeChild(el);
-    delete result?._elPositionMap[k];
-  });
+  while (result.childNodes.length > newChildren.length) {
+    result?.removeChild(result.childNodes[0]);
+  }
 
+  console.log('result is ', result)
   if (result !== el) {
     parent?.replaceChild(result, el!!);
     if (typeof attrs.ref === "function") {

@@ -71,9 +71,37 @@ const testWithWhen = (pass, fail) => {
   }, 100);
 }
 
+const ChangingChildrenExample = compose(
+  withState({ childValues: [<span>test1</span>, " test2 ", <span>test3</span>] }),
+  withWhen([], ({ setChildValues }) => {
+    setChildValues(["test0 ", <span>test1</span>, " test2 ", <span>test3</span>]);
+  }),
+
+  ({ ref, childValues }) => {
+    return <div key="debug" ref={ref}>
+      { childValues }
+    </div>;
+  }
+);
+
+const testChangeChildren = (pass, fail) => {
+  const result = apply(render(<ChangingChildrenExample />));
+
+  setTimeout(() => {
+    if (result.textContent !== 'test0 test1 test2 test3') {
+      console.error(`expected "test0 test1 test2 test3" but was "${result.textContent}"`);
+      fail();
+      return;
+    }
+
+    pass();
+  }, 100);
+}
+
 const testCases = [
   testBasic,
-  testWithWhen
+  testWithWhen,
+  testChangeChildren
 ]
 
 const runTests = () => {

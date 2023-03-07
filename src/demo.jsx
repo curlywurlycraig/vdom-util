@@ -33,17 +33,16 @@ const Editor = compose(
       }, []);
     }
 
-    const result = computeSpans();
-    console.log('resulting spans', result);
-
-    return <div ref={ref} class="editor_container">
-      <textarea class="editor_textarea" value={value} input={e => onChange(e.target.value)} />
-      <pre class="editor_draw">
-        <code>
-          { result }
-        </code>
-      </pre>
-    </div>
+    return (
+      <div ref={ref} class="editor_container">
+        <textarea class="editor_textarea" value={value} input={e => onChange(e.target.value)} />
+        <pre class="editor_draw">
+          <code>
+            { computeSpans() }
+          </code>
+        </pre>
+      </div>
+    );
   }
 )
 
