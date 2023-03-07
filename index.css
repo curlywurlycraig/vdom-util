@@ -59,3 +59,7 @@ code {
 .parsed_KEYWORD {
     color: #d56d0c;
 }
+
+.parsed_STRING {
+    color: #ea84d0;
+}

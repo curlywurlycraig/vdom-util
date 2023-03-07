@@ -34,21 +34,12 @@ const parseWhileChar = (charCond) => (ctx) => {
     }
 }
 
-const parseWhile = (parser) => (ctx) => {
-    const startIdx = ctx.idx;
-    let totalLength = 0;
-    while (true) {
-        const result = drop(parser(ctx));
-        if (!result) {
-            ctx.idx = startIdx;
-            return {
-                start: startIdx,
-                end: startIdx + totalLength
-            };
-        }
-
-        totalLength += (result.end - result.start);
-    }
+const maybe = (parser) => (ctx) => {
+    const result = parser(ctx);
+    return result || {
+        start: ctx.idx,
+        end: ctx.idx
+    };
 }
 
 const parseAlphanumeric = () => parseWhileChar(isAlpha);
@@ -98,12 +89,6 @@ const and = (...parsers) => (ctx) => {
         end: ctx.idx + totalLength
     }
 }
-
-const parseStringContents = () => and(
-    parseCharacter('"'),
-    parseWhileChar(c => c !== '"'),
-    parseCharacter('"')
-);
 
 const parseToken = (token) => (ctx) => {
     const startIndex = ctx.idx;
@@ -182,14 +167,21 @@ const funcCallName = and(
 
 const comment = and(
     parseString("//"),
-    parseWhileChar(c => c !== '\n')
+    maybe(parseWhileChar(c => c !== '\n'))
 )
+
+const string = and(
+    parseCharacter('"'),
+    maybe(parseWhileChar(c => c !== '"')),
+    parseCharacter('"')
+);
 
 export const parseC = untilEnd(
     or(
         drop(parseWhitespace()),
         consume(funcCallName, "FUNC_CALL"),
         consume(comment, "COMMENT"),
+        consume(string, "STRING"),
         consume(parseString("void"), "KEYWORD"),
         consume(parseString("return"), "KEYWORD"),
         consume(parseString("int"), "KEYWORD"),

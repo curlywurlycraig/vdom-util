@@ -133,9 +133,7 @@ export const apply = (hic: any, el: TaggedElement | undefined) => {
     const currChild = newChildren[i];
     const desiredNextSibling = newChildren[i+1] || null;
     const existingNextSibling = currChild.nextSibling;
-    if (desiredNextSibling !== existingNextSibling || !currChild.parentNode || i === newChildren.length - 1) {
-      console.log('inserting ', currChild, 'before ', desiredNextSibling, existingNextSibling);
-      // TODO I am here. for some reason the last node isn't going in
+    if (desiredNextSibling !== existingNextSibling || !result.contains(currChild)) {
       result?.insertBefore(currChild, desiredNextSibling);
     }
   }
@@ -144,7 +142,6 @@ export const apply = (hic: any, el: TaggedElement | undefined) => {
     result?.removeChild(result.childNodes[0]);
   }
 
-  console.log('result is ', result)
   if (result !== el) {
     parent?.replaceChild(result, el!!);
     if (typeof attrs.ref === "function") {
