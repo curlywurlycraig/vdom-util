@@ -104,7 +104,11 @@ export const apply = (hic: any, el: TaggedElement | undefined) => {
     if (el?.nodeType !== 3) {
       return document.createTextNode(hic);
     }
-    el.nodeValue = hic;
+
+    if (el.textContent !== hic) {
+      el.textContent = hic;
+    }
+
     return el;
   }
 
