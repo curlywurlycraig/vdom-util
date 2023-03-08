@@ -44,8 +44,6 @@ const maybe = (parser) => (ctx) => {
 
 const parseAlphanumeric = () => parseWhileChar(isAlpha);
 
-const parseWhitespace = () => parseWhileChar(isWhitespace);
-
 const parseCharacterCond = (cond) => (ctx) => {
     if (cond(ctx.raw[ctx.idx])) {
         return {
@@ -55,7 +53,11 @@ const parseCharacterCond = (cond) => (ctx) => {
     }
 }
 
+const whitespace = parseCharacterCond(isWhitespace);
+
 const parseCharacter = (ch) => parseCharacterCond(c => c === ch);
+
+const nonAlpha = parseCharacterCond(c => !isAlpha(c));
 
 const parseString = (str) => {
     const parsers = [];
@@ -90,24 +92,18 @@ const and = (...parsers) => (ctx) => {
     }
 }
 
-const parseToken = (token) => (ctx) => {
-    const startIndex = ctx.idx;
-    if (ctx.raw.slice(startIndex, startIndex + token.length) === token) {
-        return {
-            start: startIndex,
-            end: startIndex + token.length
-        };
-    }
-}
-
 const drop = (parser) => (ctx) => {
+    const currIdx = ctx.idx;
     const result = parser(ctx);
     if (!result) {
         return;
     }
 
     ctx.idx += (result.end - result.start);
-    return result;
+    return {
+        start: currIdx,
+        end: currIdx 
+    };
 }
 
 const consume = (parser, type) => (ctx) => {
@@ -119,7 +115,7 @@ const consume = (parser, type) => (ctx) => {
     result.type = type;
     result.parser = parser;
     ctx.tokens.push(result);
-    ctx.idx += (result.end - result.start);
+    ctx.idx = result.end;
     return result;
 }
 
@@ -176,18 +172,51 @@ const string = and(
     parseCharacter('"')
 );
 
+const startOfInput = (ctx) => {
+    if (ctx.idx === 0) {
+        return {
+            start: 0,
+            end: 0
+        }
+    }
+
+    return null;
+}
+
+const endOfInput = (ctx) => {
+    if (ctx.idx === ctx.raw.length) {
+        return {
+            start: ctx.idx,
+            end: ctx.idx
+        }
+    }
+
+    return null;
+}
+
+const keyword = (str) => and(
+    or(
+        startOfInput,
+        nonAlpha
+    ),
+    parseString(str),
+    or(
+        endOfInput,
+        nonAlpha
+    )
+)
+
 export const parseC = untilEnd(
     or(
-        drop(parseWhitespace()),
         consume(funcCallName, "FUNC_CALL"),
         consume(comment, "COMMENT"),
         consume(string, "STRING"),
-        consume(parseString("void"), "KEYWORD"),
-        consume(parseString("return"), "KEYWORD"),
-        consume(parseString("int"), "KEYWORD"),
-        consume(parseString("double"), "KEYWORD"),
-        consume(parseString("struct"), "KEYWORD"),
-        consume(parseString("typedef"), "KEYWORD"),
+        consume(keyword("void"), "KEYWORD"),
+        consume(keyword("return"), "KEYWORD"),
+        consume(keyword("int"), "KEYWORD"),
+        consume(keyword("double"), "KEYWORD"),
+        consume(keyword("struct"), "KEYWORD"),
+        consume(keyword("typedef"), "KEYWORD"),
         drop(one())
     )
 )
