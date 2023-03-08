@@ -78,7 +78,7 @@ const ChangingChildrenExample = compose(
   }),
 
   ({ ref, childValues }) => {
-    return <div key="debug" ref={ref}>
+    return <div ref={ref}>
       { childValues }
     </div>;
   }
@@ -98,10 +98,91 @@ const testChangeChildren = (pass, fail) => {
   }, 100);
 }
 
+const ShrinkingChildrenExample = compose(
+  withState({ childValues: [<span>test1</span>, " test2 ", <span>test3</span>] }),
+  withWhen([], ({ setChildValues }) => {
+    setChildValues(["test2"]);
+  }),
+
+  ({ ref, childValues }) => {
+    return <div ref={ref}>
+      { childValues }
+    </div>;
+  }
+);
+
+const testShrinkChildren = (pass, fail) => {
+  const result = apply(render(<ShrinkingChildrenExample />));
+
+  setTimeout(() => {
+    if (result.textContent !== 'test2') {
+      console.error(`expected "test2" but was "${result.textContent}"`);
+      fail();
+      return;
+    }
+
+    pass();
+  }, 100);
+}
+
+const DifferentElementChild1 = compose(
+  withState({ value: 0 }),
+  withWhen([], ({ setValue }) => {
+    setValue(1);
+  }),
+  ({ ref, value }) => {
+    return <p ref={ref}>{ value }</p>;
+  }
+)
+
+const DifferentElementChild2 = compose(
+  withState({ foo: 10 }),
+  withWhen([], ({ setFoo }) => {
+    setFoo(20);
+  }),
+  ({ ref, foo }) => {
+    return <p ref={ref}>{ foo }</p>;
+  }
+)
+
+const DifferentElementExample = compose(
+  withState({ currentChild: 0 }),
+  withWhen([], ({ setCurrentChild }) => {
+    setCurrentChild(1);
+  }),
+  ({ ref, currentChild }) => {
+    if (currentChild === 0) {
+      return <div ref={ref}>
+          <DifferentElementChild1 />
+        </div>;
+    } else {
+      return <div ref={ref}>
+        <DifferentElementChild2 />
+      </div>;
+    }
+  }
+)
+
+const testChangingElementChild = (pass, fail) => {
+  const result = apply(render(<DifferentElementExample />));
+
+  setTimeout(() => {
+    if (result.textContent !== '20') {
+      console.error(`expected "20" but was "${result.textContent}"`);
+      fail();
+      return;
+    }
+
+    pass();
+  }, 100);
+}
+
 const testCases = [
   testBasic,
   testWithWhen,
-  testChangeChildren
+  testChangeChildren,
+  testShrinkChildren,
+  testChangingElementChild
 ]
 
 const runTests = () => {

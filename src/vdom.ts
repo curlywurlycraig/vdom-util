@@ -112,7 +112,7 @@ export const apply = (hic: any, el: TaggedElement | undefined) => {
     return el;
   }
 
-  const prevTag = el?._hic?.[0]
+  const [prevTag, prevAttrs] = el?._hic || [];
   const [tag, attrs] = hic;
 
   // New element case
@@ -146,12 +146,13 @@ export const apply = (hic: any, el: TaggedElement | undefined) => {
     result?.removeChild(result.childNodes[0]);
   }
 
-  if (result !== el) {
-    parent?.replaceChild(result, el!!);
-    if (typeof attrs.ref === "function") {
-      attrs.ref(result);
-    }
+  if (el !== result) {
+    el?.parentNode?.replaceChild(result, el!!);
   }
-  
+
+  if (typeof attrs.ref === "function" && attrs.ref !== prevAttrs?.ref) {
+    attrs.ref(result, attrs.key);
+  }
+
   return result;
 }

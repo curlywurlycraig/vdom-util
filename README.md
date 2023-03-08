@@ -23,14 +23,3 @@ Serve this directory and navigate to `/index.html`
 # Tests
 
 Tests are executed in browser at `/test.html` after running `npm run build-test`
-
-# TODO
-
-Add tests:
-- [ ] key doesn't change when apply(render) happens once at top level, then again from state change
-- [ ] If you conditionally render different stateful components that have the same expanded child
-weird things happen (because ref isn't called again, basically. I have fixed this in another project, just need to fix here too and add a test case)
-- [ ] Improve the testing tool to have a better feedback loop
-- [ ] Think of more tests to evaluate the awkward cases
-E.g. array of mixed text/non-text nodes, array which grows/shrinks in size, passing in a custom key, etc
-- [ ] When the number of children shrinks
