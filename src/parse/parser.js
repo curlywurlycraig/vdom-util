@@ -65,12 +65,12 @@ const parseString = (str) => {
         parsers.push(parseCharacter(str[i]));
     }
 
-    return and(...parsers);
+    return sequence(...parsers);
 }
 
 // Returns null if any of the and fail, and resets.
 // If the whole sequence of parsers succeeds to parse, returns a token span
-const and = (...parsers) => (ctx) => {
+const sequence = (...parsers) => (ctx) => {
     const startIdx = ctx.idx;
     let totalLength = 0;
     for (let i = 0; i < parsers.length; i++) {
@@ -135,7 +135,7 @@ const or = (...parsers) => (ctx) => {
 }
 
 // Returns the resulting token, but with length 0.
-// Useful for including at the end of an "and" parser, when you don't
+// Useful for including at the end of an "sequence" parser, when you don't
 // want to include the final parsed result
 const peek = (parser) => (ctx) => {
     const result = parser(ctx);
@@ -149,6 +149,25 @@ const peek = (parser) => (ctx) => {
     };
 }
 
+// Jumps back an amount, tries the parser, then jumps back, returning the result (with length 0)
+// Useful for including at the beginning of an "sequence" parser
+// when you don't want to include in the final parsed result
+const peekBack = (parser, amount = 1) => (ctx) => {
+    const origIdx = ctx.idx;
+    ctx.idx = ctx.idx - amount;
+    const result = parser(ctx);
+    if (!result) {
+        ctx.idx = origIdx;
+        return;
+    }
+
+    ctx.idx = origIdx;
+    return {
+        start: origIdx,
+        end: origIdx
+    };
+}
+
 const one = () => (ctx) => {
     return {
         start: ctx.idx,
@@ -156,17 +175,17 @@ const one = () => (ctx) => {
     };
 }
 
-const funcCallName = and(
+const funcCallName = sequence(
     parseAlphanumeric(),
     peek(parseCharacter("("))
 );
 
-const comment = and(
+const comment = sequence(
     parseString("//"),
     maybe(parseWhileChar(c => c !== '\n'))
 )
 
-const string = and(
+const string = sequence(
     parseCharacter('"'),
     maybe(parseWhileChar(c => c !== '"')),
     parseCharacter('"')
@@ -194,17 +213,17 @@ const endOfInput = (ctx) => {
     return null;
 }
 
-const keyword = (str) => and(
+const keyword = (str) => sequence(
     or(
         startOfInput,
-        nonAlpha
+        peekBack(nonAlpha)
     ),
     parseString(str),
-    or(
+    peek(or(
         endOfInput,
         nonAlpha
-    )
-)
+    ))
+);
 
 export const parseC = untilEnd(
     or(
