@@ -177,12 +177,40 @@ const testChangingElementChild = (pass, fail) => {
   }, 100);
 }
 
+const NullExample = compose(
+  withState({ childNodes: ["hello ", null, "world"]}),
+  withWhen([], ({ setChildNodes }) => {
+    setChildNodes(["ahoy ", "matey"])
+  }),
+  ({ ref, childNodes }) => {
+    return <div ref={ref}>
+      { childNodes }
+    </div>;
+  }
+);
+
+const testNulls = (pass, fail) => {
+  const result = apply(render(<NullExample />));
+
+  setTimeout(() => {
+    if (result.textContent !== 'ahoy matey') {
+      console.error(`expected "ahoy matey" but was "${result.textContent}"`);
+      fail();
+      return;
+    }
+
+    pass();
+  }, 100);
+}
+
+
 const testCases = [
   testBasic,
   testWithWhen,
   testChangeChildren,
   testShrinkChildren,
-  testChangingElementChild
+  testChangingElementChild,
+  testNulls
 ]
 
 const runTests = () => {

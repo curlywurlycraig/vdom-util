@@ -6,6 +6,8 @@ interface Tagged {
   value?: any
 }
 
+const FUNC_TOKEN = "function";
+
 type TaggedElement = Tagged & Element & Node
 
 function isHic(a) {
@@ -45,7 +47,7 @@ export const render = (hic: HicType, key = "__r"): HicType => {
       return render(child, key + "c" + (child?.[1]?.key || idx));
     });
 
-  if (typeof tag === 'function') {
+  if (typeof tag === FUNC_TOKEN) {
     const renderResult = tag({ ...attrs, children: renderedChildren });
     return render(renderResult, key + "e" + (renderResult?.key || ""));
   }
@@ -65,16 +67,17 @@ const updateAttrs = (el: TaggedElement, attrs: object) => {
   Object
     .entries(attrs)
     .forEach(([k, v]) => { 
-      if (prevAttrs && typeof prevAttrs[k] === 'function') {
+      if (prevAttrs && typeof prevAttrs[k] === FUNC_TOKEN) {
         el.removeEventListener(k, prevAttrs[k]);
       }
 
-      if (typeof v === 'function') {
+      if (typeof v === FUNC_TOKEN) {
         el.addEventListener(k.toLowerCase(), v);
       } else {
         // Weird specific case. The view doesn't update if you do el.setAttribute('value', 10) on an input element.
-        if (k === 'value') {
-          el.value = v;
+        if (k === 'value' || k === 'disabled') {
+          el[k] = v;
+          return;
         }
         
         const asElement = el as TaggedElement;
@@ -87,12 +90,28 @@ const updateAttrs = (el: TaggedElement, attrs: object) => {
   return el;
 }
 
+const updateChildren = (el: TaggedElement, newChildren: TaggedElement[]) => {
+  for (let i = newChildren.length - 1; i >= 0; i--) {
+    const currChild = newChildren[i];
+    const desiredNextSibling = newChildren[i+1] || null;
+    const existingNextSibling = currChild.nextSibling;
+    if (desiredNextSibling !== existingNextSibling || !el.contains(currChild)) {
+      el?.insertBefore(currChild, desiredNextSibling);
+    }
+  }
+
+  while (el.childNodes.length > newChildren.length) {
+    el?.removeChild(el.childNodes[0]);
+  }
+
+  return el;
+}
+
 /**
    Given some HTML element, update that element and its children with the hiccup.
    This preserves existing HTML elements without removing and creating new ones.
 */
 export const apply = (hic: any, el: TaggedElement | undefined) => {
-  const parent = el?.parentNode;
   let result: TaggedElement | undefined = el;
 
   if (!hic && hic !== "") {
@@ -126,31 +145,21 @@ export const apply = (hic: any, el: TaggedElement | undefined) => {
 
   // Apply each child and assign as a child to this element
   result._hic = hic;
-  result._elPositionMap = result._elPositionMap || {};
   const children = isHic(hic) ? hic[2] : [];
-  const newChildren = children.map((child, idx) => {
-    const existingNode = el?.childNodes[idx];
-    return apply(child, existingNode as TaggedElement);
-  }).filter(c => c);
+  const newChildren = children
+    .filter(c => c)
+    .map((child, idx) => {
+      const existingNode = el?.childNodes[idx];
+      return apply(child, existingNode as TaggedElement);
+    });
 
-  for (let i = newChildren.length - 1; i >= 0; i--) {
-    const currChild = newChildren[i];
-    const desiredNextSibling = newChildren[i+1] || null;
-    const existingNextSibling = currChild.nextSibling;
-    if (desiredNextSibling !== existingNextSibling || !result.contains(currChild)) {
-      result?.insertBefore(currChild, desiredNextSibling);
-    }
-  }
-
-  while (result.childNodes.length > newChildren.length) {
-    result?.removeChild(result.childNodes[0]);
-  }
+  updateChildren(result, newChildren);
 
   if (el !== result) {
     el?.parentNode?.replaceChild(result, el!!);
   }
 
-  if (typeof attrs.ref === "function" && attrs.ref !== prevAttrs?.ref) {
+  if (typeof attrs.ref === FUNC_TOKEN && attrs.ref !== prevAttrs?.ref) {
     attrs.ref(result, attrs.key);
   }
 

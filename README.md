@@ -23,3 +23,7 @@ Serve this directory and navigate to `/index.html`
 # Tests
 
 Tests are executed in browser at `/test.html` after running `npm run build-test`
+
+# TODO
+
+- [ ] Test disabled attribute being false
